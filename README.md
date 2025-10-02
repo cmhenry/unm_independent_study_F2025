@@ -1,6 +1,4 @@
-# October 2025: Python NLP for Political Science PhD Students
-## Asynchronous, Self-Paced Learning with Google Colab
-### Fairooz (Political Rhetoric) & Brisa (Rights of Nature)
+# October 2025: Python NLP for Political Science
 
 ---
 
