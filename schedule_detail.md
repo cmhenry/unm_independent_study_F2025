@@ -1,427 +1,307 @@
-# October 2025: Python NLP for R Users - Asynchronous Study Plan
+# October 2025: Python NLP for Political Science PhD Students
+## Asynchronous, Self-Paced Learning with Google Colab
+### Fairooz (Political Rhetoric) & Brisa (Rights of Nature)
 
 ---
 
-## 🎯 October Learning Path Overview
-**Goal**: Transition from R to Python for NLP, building dissertation-relevant classification systems  
+## 🎯 October Overview
 **Format**: Self-paced Google Colab notebooks with asynchronous support  
-**Time Commitment**: ~10-12 hours/week independent work  
+**Time Zone Gap**: 8 hours (fully asynchronous structure)  
+**Platform**: All work in Google Colab (no local Python needed)  
+**Goal**: Build dissertation-specific text classification systems
+
+**GitHub Repository**: [PLACEHOLDER_GITHUB_REPO_LINK]  
 
 ---
 
-## 📚 Week 0 (Sept 30 - Oct 4): Python for R Users Bootcamp
-*Foundation week to ensure Python comfort before diving into NLP*
+## 📚 Week 0 (Sept 30 - Oct 4): Python Foundations for R Users
 
-### Self-Paced Colab Notebooks
+### Context
+Before diving into NLP, we need to ensure comfort with Python syntax and basic text processing. These two foundational notebooks translate your R knowledge directly to Python, using political science examples throughout.
 
-**Notebook 1: R-to-Python Translation Guide**
-```python
-# Open in Colab: [will provide link]
-# Topics covered:
-"""
-R Operation          →  Python Equivalent
--------------------------------------------
-df %>% filter()      →  df[df['column'] > value]
-df %>% mutate()      →  df['new_col'] = expression
-df %>% group_by()    →  df.groupby()
-lapply()             →  list comprehension [x for x in list]
-read_csv()           →  pd.read_csv()
-ggplot()             →  plotly.express or matplotlib
-"""
-```
+### Colab Notebooks
 
-**Notebook 2: Python Essentials for Text Analysis**
-```python
-# Pre-loaded in Colab, no installation needed!
-import pandas as pd
-import numpy as np
-import re  # regex - similar to stringr
+#### **Notebook 1: R-to-Python Translation Guide** 
+📔 [Open in Colab](https://colab.research.google.com/drive/1RiWdrZQWZfln9k0GvJaIzHkpj-yb83lF?usp=drive_link)
 
-# Your first Python text processing
-def clean_text(text):
-    """This is like creating a function in R"""
-    text = text.lower()
-    text = re.sub(r'[^\w\s]', '', text)
-    return text
+**What You'll Learn:**
+- Direct R → Python operation mappings
+- Working with pandas DataFrames (just like R dataframes!)
+- String operations using Python (stringr → re)
+- Creating functions without curly braces
+- Understanding 0-based indexing
 
-# Exercise: Process your first political document
-```
+**Time Required**: 60-90 minutes  
+**Deliverable**: Complete all exercises, especially the "Your Turn" sections
 
-**Notebook 3: Working with Your Dissertation Data**
-- **Fairooz version**: Load and explore 10 political speeches
-- **Brisa version**: Load and explore 10 legal documents
-- Includes complete starter code with comments
+#### **Notebook 2: Python Text Analysis Essentials**
+📔 [Open in Colab](https://colab.research.google.com/drive/1sGPd8ENJvEz2qe9EpfE-9KAhAsYtanZs?usp=drive_link)
 
-### Asynchronous Support Structure
-- **Video walkthroughs**: 15-min Loom videos for each notebook
-- **Slack check-in**: Post one question and one success daily
-- **Office hours recording**: Weekly recorded Q&A session
+**What You'll Learn:**
+- Loading political speeches and legal documents
+- Building a text cleaning pipeline
+- Extracting features (word counts, lexical diversity)
+- Pattern detection for your specific research
+- Saving processed data for R analysis
 
-### Deliverable
-✅ Complete all 3 notebooks  
-✅ Successfully load and preview your own data  
-✅ Share one "aha moment" about Python vs R
+**Time Required**: 90-120 minutes  
+**Deliverable**: Process 20+ documents from your dissertation data
+
+### Week 0 Checklist
+- [ ] Complete Notebook 1 (translation guide)
+- [ ] Complete Notebook 2 (text essentials)
+- [ ] Upload your dissertation data to Colab
+- [ ] Process at least 20 documents
+- [ ] Post one success and one challenge in Slack
 
 ---
 
-## 📊 Week 1 (Oct 7-11): Text Preprocessing with spaCy
+## 🔧 Week 1 (Oct 7-11): Advanced Text Processing with spaCy
 
-### Core Colab Notebook: "Text Preprocessing Pipeline"
+### Context
+Now that you're comfortable with Python basics, we'll use spaCy for more sophisticated NLP tasks like named entity recognition and dependency parsing.
 
+### Core Notebook: "spaCy for Political & Legal Text"
+📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_3) | [GitHub](PLACEHOLDER_GITHUB_LINK_3)
+
+**Building on Week 0:**
+- Uses the same data loading approach from Notebook 2
+- Extends your `clean_text_basic()` function with spaCy
+- Adds entity extraction to your pattern detection
+
+**New Capabilities:**
 ```python
-# This notebook includes:
-# 1. Complete installation code (one click!)
-!pip install spacy
-!python -m spacy download en_core_web_sm
-
-# 2. Step-by-step preprocessing with YOUR data
-import spacy
-nlp = spacy.load("en_core_web_sm")
-
-# 3. Pre-written functions you just need to run
-def process_political_text(text):
-    """Already written for you - just understand and modify"""
-    doc = nlp(text)
-    # Extract entities, tokens, etc.
-    return processed_text
+# You'll learn to extract:
+- Political figures and organizations
+- Dates and temporal references  
+- Legal citations and references
+- Grammatical relationships
 ```
 
-### Individual Notebooks (Choose Your Path)
+### Individual Tracks
 
-**Fairooz: "Detecting Political Rhetoric Patterns"**
-```python
-# Colab link: [to be provided]
-# This notebook contains:
-1. Loading your speech corpus (template provided)
-2. Building a dehumanization lexicon (starter list included)
-3. Pattern matching for rhetorical devices
-4. Visualizing results
+**Fairooz: Political Rhetoric Analysis**
+📔 [Rhetoric Patterns Notebook](PLACEHOLDER_COLAB_LINK_4)
+- Build on Week 0's `political_patterns` dictionary
+- Add named entity recognition for political actors
+- Extract rhetorical structures (claims, evidence, appeals)
+- Create dehumanization detector with linguistic features
 
-# You'll modify only clearly marked sections:
-# === MODIFY THIS SECTION ===
-your_keywords = ['your', 'terms', 'here']
-# === END MODIFICATION ===
-```
+**Brisa: Legal Document Structure**
+📔 [Legal Parser Notebook](PLACEHOLDER_COLAB_LINK_5)
+- Extend Week 0's `legal_patterns` dictionary
+- Parse legal citations and cross-references
+- Extract provision hierarchies
+- Identify enforcement mechanisms
 
-**Brisa: "Legal Document Structure Parser"**
-```python
-# Colab link: [to be provided]
-# This notebook contains:
-1. Loading RoN documents (template provided)
-2. Extracting legal citations (regex provided)
-3. Identifying provision types
-4. Creating structured output
-
-# Pre-built legal patterns:
-citation_pattern = r'\b\d{1,3}\s+\w+\.\s+\d+\b'  # Already tested!
-```
-
-### Learning Resources
-- **Video Tutorial**: "Python Text Processing for Social Scientists" (45 min)
-- **Cheat Sheet**: PDF with R → Python text operations
-- **Example Output**: See exactly what your results should look like
-
-### Weekly Milestone
-- Process 50 documents through your pipeline
-- Share 3 interesting patterns you discovered
-- Post one coding challenge for peer help
+### Week 1 Deliverables
+- Process 50 documents through spaCy pipeline
+- Extract entities and patterns specific to your research
+- Compare results with Week 0's basic approach
 
 ---
 
-## 🤖 Week 2 (Oct 14-18): Zero-Shot Classification with Hugging Face
+## 🤖 Week 2 (Oct 14-18): Zero-Shot Classification with Transformers
 
-### Core Colab Notebook: "LLMs Without the Complexity"
+### Context
+Building on your pattern detection from Weeks 0-1, we'll now use pre-trained language models for automatic classification without training data.
 
+### Core Notebook: "Zero-Shot Classification Made Simple"
+📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_6) | [GitHub](PLACEHOLDER_GITHUB_LINK_6)
+
+**Connection to Previous Work:**
+- Load your processed data from Week 1
+- Compare zero-shot results with pattern-based detection
+- No complex setup - Hugging Face models just work in Colab!
+
+**What You'll Build:**
 ```python
-# One-click setup in Colab:
-!pip install transformers
-
-from transformers import pipeline
-
-# Pre-configured classifier - just works!
-classifier = pipeline("zero-shot-classification")
-
-# Your task: Define YOUR categories
-fairooz_labels = ["dehumanizing", "neutral", "humanizing"]
-brisa_labels = ["substantive_right", "procedural_right", "enforcement"]
-
-# The notebook does the rest!
-results = classifier(your_text, candidate_labels=your_labels)
+# Your classification pipeline:
+1. Load your cleaned text (from Week 0-1)
+2. Define classification categories
+3. Apply zero-shot classifier
+4. Validate against your patterns
+5. Export results for analysis
 ```
 
-### Individual Projects
+### Individual Applications
 
-**Fairooz: Multi-Label Rhetoric Classification**
-- Pre-built notebook with:
-  - Working classifier for 6 rhetoric types
-  - Batch processing code (handles 100s of documents)
-  - Visualization of results over time
-  - Validation against 20 pre-coded examples
+**Fairooz:**
+- Categories: dehumanizing, neutral, humanizing, inflammatory
+- Multi-label classification for rhetorical strategies
+- Confidence thresholds for human review
 
-**Brisa: Hierarchical Legal Classification**
-- Pre-built notebook with:
-  - Two-stage classification (document type → provision type)
-  - Confidence thresholds already tuned
-  - Export to CSV for R analysis
-  - Comparison with manual coding
+**Brisa:**
+- Categories: substantive_right, procedural_right, enforcement_mechanism
+- Hierarchical classification (document → provision → details)
+- Jurisdiction and scope extraction
 
-### Troubleshooting Guide
-```markdown
-Common Issues & Solutions:
-1. "Out of memory" → Use provided batch_size=8
-2. "Slow processing" → Use provided caching code
-3. "Weird results" → Check provided label guidelines
-```
-
-### Weekly Milestone
-- Classify 200 documents
-- Achieve >70% accuracy on test set
-- Document 3 classification challenges
+### Week 2 Deliverables
+- Classify 200 documents using zero-shot models
+- Achieve >70% agreement with manual coding
+- Create confusion matrix comparing with Week 1 patterns
 
 ---
 
-## 🎓 Week 3 (Oct 21-25): OpenAI/Anthropic API Classification
+## 💡 Week 3 (Oct 21-25): LLM Classification with GPT-4/Claude
 
-### Core Colab Notebook: "Production-Ready LLM Classification"
+### Context
+For complex classification tasks requiring reasoning, we'll use GPT-4 or Claude APIs. This builds directly on Week 2's work but adds nuanced understanding.
 
+### Core Notebook: "Cost-Effective LLM Classification"
+📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_7) | [GitHub](PLACEHOLDER_GITHUB_LINK_7)
+
+**Smart Integration:**
+- Start with Week 2's zero-shot results
+- Use LLMs only for ambiguous cases
+- Implement caching to avoid reprocessing
+- Cost calculator before running
+
+**Prompt Engineering Templates:**
 ```python
-# Secure API key handling in Colab
-from google.colab import userdata
-api_key = userdata.get('OPENAI_KEY')  # Instructions provided
-
-# Pre-written prompt templates - just customize!
-def create_prompt(text, YOUR_CRITERIA):
-    """
-    You only need to modify the criteria section
-    Everything else is optimized and tested
-    """
-    prompt = f"""
-    Classify this political text:
-    
-    Text: {text}
-    
-    Criteria: {YOUR_CRITERIA}
-    
-    Return: category and confidence (0-1)
-    """
-    return prompt
+# Pre-built templates you'll customize:
+- Few-shot classification prompts
+- Chain-of-thought reasoning
+- Structured output formats
+- Batch processing with rate limits
 ```
 
-### Cost-Conscious Processing
-```python
-# The notebook includes:
-1. Cost calculator before you run
-2. Sampling strategy (test on 10, then 50, then all)
-3. Caching to avoid re-processing
-4. Batch processing with rate limits
+### API Setup
+- **OpenAI Credits**: $25 per student provided
+- **Alternative**: Claude API (similar cost)
+- **Backup**: Free Llama models via Replicate
 
-# Example included:
-estimated_cost = calculate_cost(num_documents=500)
-print(f"This will cost approximately ${estimated_cost}")
-```
+### Individual Focus
 
-### Individual Notebooks
+**Fairooz: Nuanced Rhetoric Detection**
+- Severity scoring for dehumanization (1-10 scale)
+- Target group identification
+- Historical rhetoric comparisons
+- Dog whistle detection
 
-**Fairooz: Nuanced Dehumanization Detection**
-- Few-shot examples included
-- Severity scoring system
-- Target group extraction
-- Comparison with zero-shot results
-
-**Brisa: Complex Legal Reasoning**
-- Chain-of-thought prompting for legal analysis
-- Citation verification
+**Brisa: Legal Reasoning**
 - Implementation timeline extraction
-- Jurisdiction identification
+- Enforceability assessment
+- Precedent identification
+- Innovation vs. imitation scoring
 
-### Weekly Milestone
-- Process 100 documents with GPT-4
-- Compare with Week 2's zero-shot results
-- Create cost-benefit analysis
+### Week 3 Deliverables
+- Process 100 high-priority documents
+- Cost-benefit analysis (LLM vs zero-shot)
+- Refined classification system
+- Performance metrics comparison
 
 ---
 
-## 📈 Week 4 (Oct 28-31): Integration & Analysis
+## 📊 Week 4 (Oct 28-31): Integration & Export for November
 
-### Final Colab Notebook: "Putting It All Together"
+### Context
+Consolidate all methods into a single pipeline, preparing your data for November's causal analysis (which can be done in R!).
 
+### Final Notebook: "Complete Classification Pipeline"
+📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_8) | [GitHub](PLACEHOLDER_GITHUB_LINK_8)
+
+**Bringing It All Together:**
 ```python
-# Combine everything into one pipeline:
-def complete_analysis_pipeline(document_folder):
-    """
-    This function is completely written for you!
-    Just point it to your data
-    """
-    # 1. Load documents
-    # 2. Preprocess with spaCy
-    # 3. Classify with best method
-    # 4. Export for R analysis
-    # 5. Create visualizations
-    
-    return "results.csv", "visualizations.html"
+# Your integrated pipeline:
+1. Load raw documents
+2. Clean text (Week 0 methods)
+3. Extract features (Week 1 spaCy)
+4. Initial classification (Week 2 zero-shot)
+5. Refine ambiguous cases (Week 3 LLMs)
+6. Export for R analysis
 ```
 
-### Export for R Analysis
-```python
-# Special section: Preparing for November's R work
-# Export formats optimized for R:
-df.to_csv('for_r_analysis.csv', index=False)
-df.to_feather('for_r_analysis.feather')  # Faster R loading
-
-# Metadata for R:
-metadata = {
-    'processing_date': today,
-    'classification_method': 'GPT-4',
-    'confidence_threshold': 0.7
-}
-```
+### Export Formats
+- **CSV**: For R's read.csv()
+- **Feather**: For faster R loading
+- **JSON**: For metadata preservation
+- **Codebook**: Variable descriptions
 
 ### Individual Deliverables
 
 **Both Students:**
-1. Processed dataset (500+ documents)
-2. Classification performance report
-3. Methods comparison table
-4. Ready-for-R dataset
+1. **Processed Dataset**: 500+ classified documents
+2. **Methods Comparison**: 
+   - Accuracy metrics
+   - Processing time
+   - Cost analysis
+3. **R-Ready Output**: 
+   ```r
+   # Your data will include:
+   - document_id
+   - date
+   - original_text
+   - cleaned_text
+   - classification
+   - confidence_score
+   - extracted_features
+   ```
 
 ---
 
-## 📋 Asynchronous Schedule & Support
+# Resources & Readings
 
-### Weekly Rhythm (Flexible Timing)
+#### Core Texts
+- Grimmer, J., Roberts, M. E., & Stewart, B. M. (2022). *Text as Data: A New Framework for Machine Learning and the Social Sciences*
+- Jurafsky, D. & Martin, J.H. (2024). *Speech and Language Processing* (Ch. 6, 11, 15)
 
-**Monday (Your Time)**
-- New notebooks released
-- Video walkthrough available
-- Week's goals posted
+#### Weekly Papers
+**Week 1:**
+- Denny, M. J., & Spirling, A. (2018). "Text Preprocessing for Unsupervised Learning"
+- Benoit, K. et al. (2016). "quanteda: Quantitative Analysis of Textual Data"
 
-**Wednesday (Your Time)**
-- Mid-week check-in form
-- Post questions in Slack
-- Share progress screenshot
+**Week 2:**
+- Rodriguez, P. L., & Spirling, A. (2022). "Word Embeddings for the Analysis of Ideological Placement in Parliamentary Corpora"
+- Reimers, N., & Gurevych, I. (2019). "Sentence-BERT"
 
-**Friday (Your Time)**
-- Submit week's notebook
-- Peer feedback exchange
-- Watch recorded office hours
+**Week 3:**
+- Ziems, C. et al. (2024). "Can Large Language Models Transform Computational Social Science?"
+- Törnberg, P. (2023). "ChatGPT-4 Outperforms Experts and Crowd Workers in Annotating Political Twitter Messages"
 
-### Communication Protocol
+**Week 4:**
+- King, G., Lam, P., & Roberts, M. E. (2017). "Computer-Assisted Keyword and Document Set Discovery"
+- Molnar, C. (2022). *Interpretable Machine Learning* (selected chapters)
 
-**Slack Channels:**
-- `#python-help` - Code questions (2-hour response time)
-- `#daily-wins` - Share successes
-- `#troubleshooting` - Error messages and fixes
-
-**Asynchronous Meetings:**
-- Record 5-min weekly Loom update
-- Instructor provides 10-min video feedback
-- Schedule one live meeting if needed (Calendly link)
-
-### Resources Always Available
-
-**Google Drive Folder:**
-```
-/October_NLP_Course/
-  /Week_1/
-    - Starter_Notebook.ipynb
-    - Solution_Notebook.ipynb
-    - Video_Walkthrough.mp4
-    - R_to_Python_CheatSheet.pdf
-  /Week_2/
-    ...
-  /Sample_Data/
-    - political_speeches_sample.csv
-    - legal_documents_sample.csv
-  /Templates/
-    - classification_report_template.ipynb
-```
-
----
-
-## 🎯 Success Metrics
-
-### Self-Assessment Checkpoints
-
-After each week, you should be able to:
-
-**Week 1:** ✅ "I can load and preprocess text in Python"  
-**Week 2:** ✅ "I can classify documents with zero-shot models"  
-**Week 3:** ✅ "I can use GPT-4 for complex classification"  
-**Week 4:** ✅ "I have a complete pipeline for my dissertation"
-
-### Troubleshooting Decision Tree
-
-```mermaid
-Problem?
-├── Code won't run
-│   └── Check pinned Slack message for common fixes
-├── Conceptual confusion
-│   └── Watch the concept video (< 10 min)
-├── Need human help
-│   └── Post in Slack with:
-│       - Screenshot
-│       - What you tried
-│       - Minimal example
-└── Completely stuck
-    └── Book 15-min video call (Calendly)
-```
-
----
-
-## 💡 R Users: Special Notes
-
-### Your R Skills Transfer!
-- **tidyverse thinking** → pandas methods chain similarly
-- **ggplot logic** → plotly express uses same grammar
-- **R Markdown** → Jupyter notebooks are similar
-- **Functions** → Python functions are simpler (no curly braces!)
-
-### Keep Using R When It Makes Sense
-- Export Python results → Analyze in R
-- Use R for final statistical analysis
-- Create publication figures in R if preferred
-- November's causal analysis can be in R!
-
-### Common R → Python Gotchas (Pre-Solved in Notebooks)
+#### Tools & Libraries
 ```python
-# Python uses 0-indexing (R uses 1)
-first_item = list[0]  # Not list[1]
+# Core dependencies
+pandas >= 2.0
+numpy >= 1.24
+scikit-learn >= 1.3
+spacy >= 3.6
+transformers >= 4.30
+sentence-transformers >= 2.2
+openai >= 1.0
+anthropic >= 0.5
+langchain >= 0.1
 
-# Python uses indentation (R uses {})
-if condition:
-    do_something()  # Indent matters!
+# Visualization
+plotly >= 5.0
+altair >= 5.0
+streamlit >= 1.25  # for dashboards
 
-# Python uses : for ranges (R uses :)
-items[0:5]  # First 5 items
-
-# These are all handled in the notebooks!
+# Optional but recommended
+bertopic >= 0.15
+river >= 0.18  # for online learning
+cleanlab >= 2.4  # for label quality
 ```
 
----
-
-## 📧 Final Notes
-
-### What You DON'T Need to Worry About
-- Installing Python locally (Colab handles it)
-- Managing packages (All pre-installed in notebooks)
-- Writing complex code (Templates provided)
-- Debugging alone (Support system in place)
-
-### What You SHOULD Focus On
-- Understanding the concepts
-- Applying methods to YOUR data
-- Asking questions early and often
-- Building toward your dissertation
-
-### October Commitment
-- **Time**: 10-12 hours/week (flexible scheduling)
-- **Output**: 500+ classified documents
-- **Learning**: Confidence with Python NLP
-- **Support**: Never more than 24 hours from help
-
-### Questions Before Starting?
-Post in #october-kickoff or email instructor
+### Key Documentation
+- [Google Colab Basics](https://colab.research.google.com/notebooks/intro.ipynb)
+- [Pandas for R Users](https://pandas.pydata.org/docs/getting_started/comparison/comparison_with_r.html)
+- [spaCy 101](https://spacy.io/usage/spacy-101)
+- [Hugging Face Tutorials](https://huggingface.co/docs/transformers/index)
 
 ---
 
-*Remember: Every notebook is tested, every function is pre-written, and every error has a solution. You're learning Python as a tool, not becoming a programmer. Focus on your research questions, not the syntax.*
+## ✅ Success Metrics
+
+### Final Outcomes
+
+By October 31, you will have:
+1. **Technical Skills**: Python proficiency for NLP tasks
+2. **Research Output**: 500+ documents classified and analyzed
+3. **Methodological Knowledge**: Comparison of 4 classification approaches
+4. **Ready for November**: Clean dataset for causal analysis in R
+
