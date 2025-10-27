@@ -1,0 +1,318 @@
+---
+title: "Week 1 Readme"
+output: html_document
+---
+
+
+# Week 1 Setup Guide
+## Getting Started with R for NLP
+
+This guide will help you set up your R environment for the NLP course. Complete these steps before Week 1.
+
+---
+
+## Option 1: Local Installation (Recommended)
+
+### Step 1: Install R and RStudio
+
+1. **Install R** (version 4.3 or higher)
+   - Download from: https://cran.r-project.org/
+   - Choose your operating system
+   - Follow installation instructions
+
+2. **Install RStudio Desktop** (free version)
+   - Download from: https://posit.co/download/rstudio-desktop/
+   - Install after R is installed
+
+### Step 2: Install Required Packages
+
+Open RStudio and run this code in the Console:
+
+```{r}
+# Install core packages
+install.packages(c(
+  "tidytext",
+  "quanteda",
+  "quanteda.textplots",
+  "quanteda.textstats",
+
+  "dplyr",
+  "tidyr",
+  "stringr",
+  "readr",
+
+  "ggplot2",
+  "ggraph",
+  "igraph",
+  "wordcloud",
+  "scales",
+
+  "rmarkdown",
+  "knitr",
+  "reshape"))
+```
+
+This may take 5-10 minutes. Watch for any errors.
+
+### Step 3: Test Your Installation
+
+Create a new R script and run:
+
+```{r}
+# Load libraries
+library(tidytext)
+library(quanteda)
+library(dplyr)
+library(ggplot2)
+
+# Simple test
+data("stop_words")
+print(head(stop_words))
+
+cat("✓ Installation successful!\n")
+```
+
+If you see the stop words table, you're ready to go!
+
+---
+
+## Option 2: RStudio Cloud (If local installation fails)
+
+1. Go to: https://posit.cloud/
+2. Create a free account
+3. Create a new project
+4. Run the package installation code from Step 2 above
+
+**Note:** Free tier has monthly hour limits, so use local installation if possible.
+
+---
+
+## Preparing Your Corpus
+
+### Data Format
+
+Your corpus should be a CSV file with at minimum:
+
+```
+doc_id, text
+doc_001, "Your political text here..."
+doc_002, "Another document..."
+```
+
+Additional helpful columns:
+- `date` - When the text was created
+- `author` - Who wrote it
+- `source` - Where it came from
+- `category` - Your classification scheme
+
+### Loading Your Data
+
+```{r eval=FALSE}
+# Read CSV
+my_corpus <- read_csv("data/raw/my_corpus.csv")
+
+# Check structure
+glimpse(my_corpus)
+str(my_corpus)
+
+# Verify text column
+head(my_corpus$text, 3)
+```
+
+### Minimum Corpus Size
+
+- Week 1: 50+ documents recommended
+- Weeks 2-3: 100+ documents
+- Week 4: 200+ documents (for classification)
+
+**Don't have a corpus yet?** Use the sample data generator provided in the course materials.
+
+---
+
+## Common Installation Issues
+
+### Issue 1: Package Installation Fails
+
+**Error:** `package 'X' is not available`
+
+**Solution:**
+```r
+# Update R to latest version
+# Check R version
+R.version.string
+
+# Update packages
+update.packages(ask = FALSE)
+```
+
+### Issue 2: quanteda Installation Problems
+
+**Error:** Compilation errors on Mac/Linux
+
+**Solution:**
+```r
+# Install binary versions (faster, no compilation)
+install.packages("quanteda", type = "binary")
+```
+
+### Issue 3: RMarkdown Won't Knit
+
+**Error:** pandoc not found
+
+**Solution:**
+- RStudio includes pandoc, but restart RStudio
+- Or install pandoc separately: https://pandoc.org/installing.html
+
+### Issue 4: Memory Issues with Large Corpus
+
+**Error:** "cannot allocate vector of size..."
+
+**Solution:**
+```r
+# Increase memory limit (Windows)
+memory.limit(size = 8000)
+
+# Or work with a subset first
+my_corpus_sample <- my_corpus %>% slice_sample(n = 100)
+```
+
+---
+
+## R Basics Refresher
+
+### Working with Data Frames
+
+```r
+# Load dplyr
+library(dplyr)
+
+# Select columns
+my_data %>% select(doc_id, text, date)
+
+# Filter rows
+my_data %>% filter(year == 2024)
+
+# Create new column
+my_data %>% mutate(text_length = nchar(text))
+
+# Group and summarize
+my_data %>%
+  group_by(category) %>%
+  summarize(n_docs = n())
+
+# Pipe multiple operations
+my_data %>%
+  filter(year >= 2020) %>%
+  mutate(decade = "2020s") %>%
+  select(doc_id, text, decade)
+```
+
+### Basic String Operations
+
+```r
+library(stringr)
+
+# Convert to lowercase
+str_to_lower("Hello World")
+
+# Remove punctuation
+str_replace_all("Hello, World!", "[[:punct:]]", "")
+
+# Count characters
+nchar("Hello World")
+
+# Detect pattern
+str_detect("Hello World", "World")
+
+# Extract pattern
+str_extract("Email: test@email.com", "\\S+@\\S+")
+```
+
+### Basic Visualization
+
+```r
+library(ggplot2)
+
+# Bar chart
+ggplot(data, aes(x = category, y = count)) +
+  geom_col() +
+  labs(title = "My Title")
+
+# Line plot
+ggplot(data, aes(x = year, y = frequency, color = party)) +
+  geom_line() +
+  geom_point()
+
+# Save plot
+ggsave("output/figures/my_plot.png", width = 10, height = 6)
+```
+
+---
+
+## Working with R Markdown
+
+### Creating a New Notebook
+
+1. File → New File → R Markdown
+2. Give it a title
+3. Choose HTML output
+4. Click OK
+
+### Basic Syntax
+
+```markdown
+# Heading 1
+## Heading 2
+### Heading 3
+
+**bold text**
+*italic text*
+
+- Bullet point
+- Another point
+
+1. Numbered list
+2. Second item
+```
+
+### Code Chunks
+
+Insert with: Ctrl+Alt+I (Windows) or Cmd+Option+I (Mac)
+
+```{r}
+# Your R code here
+my_data <- read_csv("data.csv")
+```
+
+### Knitting
+
+Click "Knit" button or press Ctrl+Shift+K
+
+This creates an HTML document with your code, results, and visualizations.
+
+---
+
+### Quick Corpus Statistics
+
+```{r}
+# Check your corpus
+corpus_df %>%
+  summarize(
+    n_docs = n(),
+    total_chars = sum(nchar(text)),
+    avg_length = mean(nchar(text)),
+    min_length = min(nchar(text)),
+    max_length = max(nchar(text))
+  )
+```
+
+---
+
+## Ready to Start!
+
+Once you've completed this setup:
+
+1. Open `week1_text_fundamentals_ngrams.Rmd`
+2. Work through the notebook
+3. Apply to your own corpus
+4. Complete the exercises

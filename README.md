@@ -1,305 +1,210 @@
-# October 2025: Python NLP for Political Science
+# NLP for Political Science: November 2025
+## Introduction to NLP in R with Weekly Paper Discussions
+
+**Format:** Weekly R notebooks + paper presentations  
+**Platform:** RStudio (local or RStudio Cloud)  
+**Duration:** 4 weeks (November)  
+**Goal:** Build foundational NLP understanding from basic text analysis to transformer-based classification
 
 ---
 
-## 🎯 October Overview
-**Format**: Self-paced Google Colab notebooks with asynchronous support  
-**Time Zone Gap**: 8 hours (fully asynchronous structure)  
-**Platform**: All work in Google Colab (no local Python needed)  
-**Goal**: Build dissertation-specific text classification systems
+## Course Philosophy
 
-**GitHub Repository**: [PLACEHOLDER_GITHUB_REPO_LINK]  
+This month focuses on building intuition for how NLP methods work, starting from simple frequency-based approaches and progressing to state-of-the-art transformers.
 
 ---
 
-## 📚 Week 0 (Sept 30 - Oct 4): Python Foundations for R Users
+## Weekly Structure
 
-### Context
-Before diving into NLP, we need to ensure comfort with Python syntax and basic text processing. These two foundational notebooks translate your R knowledge directly to Python, using political science examples throughout.
+### Week 1: Text Fundamentals & N-grams
+**Core Concepts:** Tokenization, word frequencies, n-grams, text preprocessing
 
-### Colab Notebooks
-
-#### **Notebook 1: R-to-Python Translation Guide** 
-📔 [Open in Colab](https://colab.research.google.com/drive/1RiWdrZQWZfln9k0GvJaIzHkpj-yb83lF?usp=drive_link)
+**R Packages:** `tidytext`, `quanteda`, `stringr`, `dplyr`
 
 **What You'll Learn:**
-- Direct R → Python operation mappings
-- Working with pandas DataFrames (just like R dataframes!)
-- String operations using Python (stringr → re)
-- Creating functions without curly braces
-- Understanding 0-based indexing
+- Tokenizing political texts (unigrams, bigrams, trigrams)
+- Building document-term matrices
+- TF-IDF weighting
+- Visualizing word frequencies and co-occurrences
+- Basic text cleaning pipelines
 
-**Time Required**: 60-90 minutes  
-**Deliverable**: Complete all exercises, especially the "Your Turn" sections
+**Practical Tasks:**
+```r
+# You'll build:
+- A unigram frequency analyzer
+- A bigram network visualization
+- TF-IDF rankings for your corpus
+- Comparative word clouds
+```
 
-#### **Notebook 2: Python Text Analysis Essentials**
-📔 [Open in Colab](https://colab.research.google.com/drive/1sGPd8ENJvEz2qe9EpfE-9KAhAsYtanZs?usp=drive_link)
+**Weekly Paper:**  
+**Grimmer, J., & Stewart, B. M. (2013).** "Text as Data: The Promise and Pitfalls of Automatic Content Analysis Methods for Political Texts." *Political Analysis*, 21(3), 267-297.
+
+**Discussion Focus:** Why simple word counts can be powerful; when they fail; how n-grams capture local context.
+
+**Deliverable:**
+- Analyze 50+ documents from your dissertation corpus
+- Create TF-IDF visualizations
+- Identify most distinctive n-grams for 2+ document groups
+- 1-page reflection on paper's relevance to your research
+
+---
+
+### Week 2: Vector Representations & Word Embeddings
+**Core Concepts:** Bag of words, word embeddings (Word2Vec, GloVe), semantic similarity
+
+**R Packages:** `text`, `word2vec`, `text2vec`, `quanteda`
 
 **What You'll Learn:**
-- Loading political speeches and legal documents
-- Building a text cleaning pipeline
-- Extracting features (word counts, lexical diversity)
-- Pattern detection for your specific research
-- Saving processed data for R analysis
+- Limitations of bag-of-words approaches
+- How word embeddings capture semantic meaning
+- Training custom embeddings vs. using pre-trained models
+- Computing similarity and analogy tasks
+- Visualizing embedding spaces with dimensionality reduction
 
-**Time Required**: 90-120 minutes  
-**Deliverable**: Process 20+ documents from your dissertation data
-
-### Week 0 Checklist
-- [ ] Complete Notebook 1 (translation guide)
-- [ ] Complete Notebook 2 (text essentials)
-- [ ] Upload your dissertation data to Colab
-- [ ] Process at least 20 documents
-- [ ] Post one success and one challenge in Slack
-
----
-
-## 🔧 Week 1 (Oct 7-11): Advanced Text Processing with spaCy
-
-### Context
-Now that you're comfortable with Python basics, we'll use spaCy for more sophisticated NLP tasks like named entity recognition and dependency parsing.
-
-### Core Notebook: "spaCy for Political & Legal Text"
-📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_3) | [GitHub](PLACEHOLDER_GITHUB_LINK_3)
-
-**Building on Week 0:**
-- Uses the same data loading approach from Notebook 2
-- Extends your `clean_text_basic()` function with spaCy
-- Adds entity extraction to your pattern detection
-
-**New Capabilities:**
-```python
-# You'll learn to extract:
-- Political figures and organizations
-- Dates and temporal references  
-- Legal citations and references
-- Grammatical relationships
+**Practical Tasks:**
+```r
+# You'll build:
+- Document similarity matrices using bag-of-words
+- Custom word2vec model on political corpus
+- Semantic similarity searches
+- Political concept analogies (e.g., "democracy" → "autocracy")
 ```
 
-### Individual Tracks
+**Weekly Paper:**  
+**Rodriguez, P. L., & Spirling, A. (2022).** "Word Embeddings: What Works, What Doesn't, and How to Tell the Difference for Applied Research." *Journal of Politics*, 84(1), 101-115.
 
-**Fairooz: Political Rhetoric Analysis**
-📔 [Rhetoric Patterns Notebook](PLACEHOLDER_COLAB_LINK_4)
-- Build on Week 0's `political_patterns` dictionary
-- Add named entity recognition for political actors
-- Extract rhetorical structures (claims, evidence, appeals)
-- Create dehumanization detector with linguistic features
+**Discussion Focus:** When embeddings improve over bag-of-words; pitfalls in political text; how to validate embedding quality.
 
-**Brisa: Legal Document Structure**
-📔 [Legal Parser Notebook](PLACEHOLDER_COLAB_LINK_5)
-- Extend Week 0's `legal_patterns` dictionary
-- Parse legal citations and cross-references
-- Extract provision hierarchies
-- Identify enforcement mechanisms
-
-### Week 1 Deliverables
-- Process 50 documents through spaCy pipeline
-- Extract entities and patterns specific to your research
-- Compare results with Week 0's basic approach
+**Deliverable:**
+- Train Word2Vec model on your corpus (min. 500 documents)
+- Identify 10+ interesting semantic relationships
+- Compare BoW vs. embedding-based document similarity
+- Document validation strategy for your embeddings
 
 ---
 
-## 🤖 Week 2 (Oct 14-18): Zero-Shot Classification with Transformers
+### Week 3: Contextual Embeddings & Document Classification
+**Core Concepts:** Context-dependent representations, sentence embeddings, supervised classification
 
-### Context
-Building on your pattern detection from Weeks 0-1, we'll now use pre-trained language models for automatic classification without training data.
+**R Packages:** `text`, `caret`, `glmnet`, `quanteda.textmodels`
 
-### Core Notebook: "Zero-Shot Classification Made Simple"
-📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_6) | [GitHub](PLACEHOLDER_GITHUB_LINK_6)
+**What You'll Learn:**
+- Why context matters: "bank" (financial) vs. "bank" (river)
+- Using pre-trained contextual models (e.g., via Python interop)
+- Feature engineering from embeddings
+- Training classifiers (logistic regression, ridge, lasso)
+- Cross-validation and performance metrics
 
-**Connection to Previous Work:**
-- Load your processed data from Week 1
-- Compare zero-shot results with pattern-based detection
-- No complex setup - Hugging Face models just work in Colab!
-
-**What You'll Build:**
-```python
-# Your classification pipeline:
-1. Load your cleaned text (from Week 0-1)
-2. Define classification categories
-3. Apply zero-shot classifier
-4. Validate against your patterns
-5. Export results for analysis
+**Practical Tasks:**
+```r
+# You'll build:
+- Sentence-level embeddings for your documents
+- Multi-class text classifier
+- Feature importance analysis
+- Confusion matrices and performance reports
 ```
 
-### Individual Applications
+**Weekly Paper:**  
+**Denny, M. J., & Spirling, A. (2018).** "Text Preprocessing For Unsupervised Learning: Why It Matters, When It Misleads, and What to Do About It." *Political Analysis*, 26(2), 168-189.
 
-**Fairooz:**
-- Categories: dehumanizing, neutral, humanizing, inflammatory
-- Multi-label classification for rhetorical strategies
-- Confidence thresholds for human review
+**Discussion Focus:** How preprocessing choices affect downstream classification; trade-offs between static and contextual embeddings.
 
-**Brisa:**
-- Categories: substantive_right, procedural_right, enforcement_mechanism
-- Hierarchical classification (document → provision → details)
-- Jurisdiction and scope extraction
-
-### Week 2 Deliverables
-- Classify 200 documents using zero-shot models
-- Achieve >70% agreement with manual coding
-- Create confusion matrix comparing with Week 1 patterns
+**Deliverable:**
+- Build 3-class minimum classifier for dissertation categories
+- Achieve >70% accuracy on held-out test set
+- Compare feature-based vs. embedding-based classification
+- Error analysis: where does your classifier fail?
 
 ---
 
-## 💡 Week 3 (Oct 21-25): LLM Classification with GPT-4/Claude
+### Week 4: Transformer Models & BERT Classification
+**Core Concepts:** Attention mechanisms, BERT architecture, fine-tuning, transfer learning
 
-### Context
-For complex classification tasks requiring reasoning, we'll use GPT-4 or Claude APIs. This builds directly on Week 2's work but adds nuanced understanding.
+**R Packages:** `text` (connects to transformers), `reticulate` (Python interop)
 
-### Core Notebook: "Cost-Effective LLM Classification"
-📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_7) | [GitHub](PLACEHOLDER_GITHUB_LINK_7)
+**What You'll Learn:**
+- How transformers differ from previous methods
+- BERT's bidirectional context understanding
+- Using pre-trained BERT for classification
+- When to use zero-shot vs. fine-tuning
+- Interpreting model predictions
 
-**Smart Integration:**
-- Start with Week 2's zero-shot results
-- Use LLMs only for ambiguous cases
-- Implement caching to avoid reprocessing
-- Cost calculator before running
-
-**Prompt Engineering Templates:**
-```python
-# Pre-built templates you'll customize:
-- Few-shot classification prompts
-- Chain-of-thought reasoning
-- Structured output formats
-- Batch processing with rate limits
+**Practical Tasks:**
+```r
+# You'll build:
+- BERT-based document classifier
+- Zero-shot classification pipeline
+- Comparison of all methods (Week 1-4)
+- Final classification system for dissertation
 ```
 
-### API Setup
-- **OpenAI Credits**: $25 per student provided
-- **Alternative**: Claude API (similar cost)
-- **Backup**: Free Llama models via Replicate
+**Weekly Paper:**  
+**Ziems, C., Held, W., Shaikh, O., Chen, J., Zhang, Z., & Yang, D. (2024).** "Can Large Language Models Transform Computational Social Science?" *Computational Linguistics*, 50(1), 237-291.
 
-### Individual Focus
+**Discussion Focus:** Strengths and limitations of LLMs in political science; ethical considerations; reproducibility challenges; when simpler methods suffice.
 
-**Fairooz: Nuanced Rhetoric Detection**
-- Severity scoring for dehumanization (1-10 scale)
-- Target group identification
-- Historical rhetoric comparisons
-- Dog whistle detection
-
-**Brisa: Legal Reasoning**
-- Implementation timeline extraction
-- Enforceability assessment
-- Precedent identification
-- Innovation vs. imitation scoring
-
-### Week 3 Deliverables
-- Process 100 high-priority documents
-- Cost-benefit analysis (LLM vs zero-shot)
-- Refined classification system
-- Performance metrics comparison
+**Deliverable:**
+- BERT classifier on your dissertation data (200+ documents)
+- Methods comparison table (accuracy, speed, interpretability)
+- Final processed dataset ready for causal analysis
+- Research memo: which method for which dissertation chapter?
 
 ---
 
-## 📊 Week 4 (Oct 28-31): Integration & Export for November
+## Progressive Skill Building
 
-### Context
-Consolidate all methods into a single pipeline, preparing your data for November's causal analysis (which can be done in R!).
-
-### Final Notebook: "Complete Classification Pipeline"
-📔 [Open in Colab](PLACEHOLDER_COLAB_LINK_8) | [GitHub](PLACEHOLDER_GITHUB_LINK_8)
-
-**Bringing It All Together:**
-```python
-# Your integrated pipeline:
-1. Load raw documents
-2. Clean text (Week 0 methods)
-3. Extract features (Week 1 spaCy)
-4. Initial classification (Week 2 zero-shot)
-5. Refine ambiguous cases (Week 3 LLMs)
-6. Export for R analysis
-```
-
-### Export Formats
-- **CSV**: For R's read.csv()
-- **Feather**: For faster R loading
-- **JSON**: For metadata preservation
-- **Codebook**: Variable descriptions
-
-### Individual Deliverables
-
-**Both Students:**
-1. **Processed Dataset**: 500+ classified documents
-2. **Methods Comparison**: 
-   - Accuracy metrics
-   - Processing time
-   - Cost analysis
-3. **R-Ready Output**: 
-   ```r
-   # Your data will include:
-   - document_id
-   - date
-   - original_text
-   - cleaned_text
-   - classification
-   - confidence_score
-   - extracted_features
-   ```
+| Week | Method | Key Insight | Limitation |
+|------|--------|-------------|------------|
+| 1 | N-grams | Local context, simple & interpretable | Sparse, no semantics |
+| 2 | Word2Vec | Semantic similarity across corpus | Static, one meaning per word |
+| 3 | Contextual embeddings | Word meaning depends on context | Requires more computation |
+| 4 | BERT | Bidirectional understanding | Complex, harder to interpret |
 
 ---
 
-# Resources & Readings
+## Technical Setup
 
-#### Core Texts
-- Grimmer, J., Roberts, M. E., & Stewart, B. M. (2022). *Text as Data: A New Framework for Machine Learning and the Social Sciences*
-- Jurafsky, D. & Martin, J.H. (2024). *Speech and Language Processing* (Ch. 6, 11, 15)
+### Required R Packages
+```r
+# Core text processing
+install.packages(c("tidytext", "quanteda", "stringr", "dplyr", "tidyr"))
 
-#### Weekly Papers
-**Week 1:**
-- Denny, M. J., & Spirling, A. (2018). "Text Preprocessing for Unsupervised Learning"
-- Benoit, K. et al. (2016). "quanteda: Quantitative Analysis of Textual Data"
+# Word embeddings
+install.packages(c("text2vec", "word2vec"))
 
-**Week 2:**
-- Rodriguez, P. L., & Spirling, A. (2022). "Word Embeddings for the Analysis of Ideological Placement in Parliamentary Corpora"
-- Reimers, N., & Gurevych, I. (2019). "Sentence-BERT"
+# Advanced NLP (requires Python setup)
+install.packages(c("text", "reticulate"))
 
-**Week 3:**
-- Ziems, C. et al. (2024). "Can Large Language Models Transform Computational Social Science?"
-- Törnberg, P. (2023). "ChatGPT-4 Outperforms Experts and Crowd Workers in Annotating Political Twitter Messages"
-
-**Week 4:**
-- King, G., Lam, P., & Roberts, M. E. (2017). "Computer-Assisted Keyword and Document Set Discovery"
-- Molnar, C. (2022). *Interpretable Machine Learning* (selected chapters)
-
-#### Tools & Libraries
-```python
-# Core dependencies
-pandas >= 2.0
-numpy >= 1.24
-scikit-learn >= 1.3
-spacy >= 3.6
-transformers >= 4.30
-sentence-transformers >= 2.2
-openai >= 1.0
-anthropic >= 0.5
-langchain >= 0.1
+# Machine learning
+install.packages(c("caret", "glmnet", "quanteda.textmodels"))
 
 # Visualization
-plotly >= 5.0
-altair >= 5.0
-streamlit >= 1.25  # for dashboards
-
-# Optional but recommended
-bertopic >= 0.15
-river >= 0.18  # for online learning
-cleanlab >= 2.4  # for label quality
+install.packages(c("ggplot2", "ggraph", "igraph", "wordcloud"))
 ```
 
-### Key Documentation
-- [Google Colab Basics](https://colab.research.google.com/notebooks/intro.ipynb)
-- [Pandas for R Users](https://pandas.pydata.org/docs/getting_started/comparison/comparison_with_r.html)
-- [spaCy 101](https://spacy.io/usage/spacy-101)
-- [Hugging Face Tutorials](https://huggingface.co/docs/transformers/index)
+### For BERT (Week 4)
+The `text` package provides R interface to Python transformers:
+```r
+library(text)
+textrpp_install()  # One-time setup
+```
 
----
 
-## ✅ Success Metrics
+## Additional Papers by Week
 
-### Final Outcomes
+### Week 1 Supplementary:
+- Benoit, K., et al. (2018). "quanteda: An R package for the quantitative analysis of textual data." *Journal of Open Source Software*, 3(30), 774.
+- Young, L., & Soroka, S. (2012). "Affective News: The Automated Coding of Sentiment in Political Texts." *Political Communication*, 29(2), 205-231.
 
-By October 31, you will have:
-1. **Technical Skills**: Python proficiency for NLP tasks
-2. **Research Output**: 500+ documents classified and analyzed
-3. **Methodological Knowledge**: Comparison of 4 classification approaches
-4. **Ready for November**: Clean dataset for causal analysis in R
+### Week 2 Supplementary:
+- Rheault, L., & Cochrane, C. (2020). "Word Embeddings for the Analysis of Ideological Placement in Parliamentary Corpora." *Political Analysis*, 28(1), 112-133.
+- Mikolov, T., et al. (2013). "Efficient Estimation of Word Representations in Vector Space." *arXiv preprint*.
 
+### Week 3 Supplementary:
+- Watanabe, K., & Zhou, Y. (2022). "Theory-Driven Analysis of Large Corpora: Semisupervised Topic Classification of the UN Speeches." *Social Science Computer Review*, 40(2), 346-366.
+- Peterson, A., & Spirling, A. (2018). "Classification Accuracy as a Substantive Quantity of Interest." *Political Analysis*, 26(3), 250-266.
+
+### Week 4 Supplementary:
+- Devlin, J., et al. (2019). "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding." *NAACL-HLT*.
+- Törnberg, P. (2023). "ChatGPT-4 Outperforms Experts and Crowd Workers in Annotating Political Twitter Messages with Zero-Shot Learning." *arXiv preprint*.

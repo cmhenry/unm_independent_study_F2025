@@ -1,0 +1,748 @@
+---
+title: "Week 1: Text Fundamentals & N-grams"
+subtitle: "NLP for Political Science - November 2025"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+```
+
+# Introduction
+
+Welcome to Week 1 of NLP for Political Science! This week, we'll build foundational skills in text analysis, moving from basic word counts to more sophisticated n-gram analysis and TF-IDF weighting.
+
+**Key Question:** How can we quantify and compare political texts using simple, interpretable methods?
+
+**This Week's Paper:** Grimmer & Stewart (2013) - "Text as Data: The Promise and Pitfalls of Automatic Content Analysis Methods for Political Texts"
+
+## Learning Objectives
+
+By the end of this notebook, you will be able to:
+
+1. Clean and preprocess political texts in R
+2. Tokenize documents into unigrams, bigrams, and trigrams
+3. Calculate and visualize word frequencies
+4. Build document-term matrices
+5. Compute TF-IDF scores to identify distinctive terms
+6. Create comparative visualizations across document groups
+7. Understand when simple frequency-based methods work (and when they don't)
+
+---
+
+# Setup and Installation
+
+## Required Packages
+
+```{r install-packages, eval=FALSE}
+# Run this once to install required packages
+install.packages(c(
+  "tidytext",      # Tidy text mining
+  "quanteda",      # Quantitative text analysis
+  "quanteda.textstat",
+  "stringr",       # String manipulation
+  "dplyr",         # Data manipulation
+  "tidyr",         # Data tidying
+  "ggplot2",       # Visualization
+  "wordcloud",     # Word clouds
+  "ggraph",        # Network graphs
+  "igraph",        # Network analysis
+  "scales",         # Plot scaling
+  "reshape2",
+  "textshape"
+))
+```
+
+## Load Libraries
+
+```{r load-libraries}
+library(tidytext)
+library(quanteda)
+library(quanteda.textstats)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(wordcloud)
+library(ggraph)
+library(igraph)
+library(scales)
+library(textshape)
+
+# Set a theme for consistent visualizations
+theme_set(theme_minimal(base_size = 12))
+```
+
+---
+
+# Part 1: Text Preprocessing Fundamentals
+
+## 1.1 Creating Sample Political Texts
+
+Let's start with some sample political texts. In your assignment, you'll use your dissertation corpus.
+
+```{r sample-texts}
+# Sample State of the Union excerpts (simplified for demonstration)
+political_texts <- tibble(
+  doc_id = paste0("doc_", 1:8),
+  text = c(
+    "We must ensure economic security for all Americans through job creation and fair wages",
+    "National security remains our top priority as we face threats from abroad",
+    "Climate change poses an existential threat requiring immediate action and international cooperation",
+    "Healthcare reform will expand access while reducing costs for working families",
+    "Immigration policy must balance security concerns with our values of compassion and opportunity",
+    "Education investment is key to economic competitiveness and social mobility",
+    "We will strengthen democracy by protecting voting rights and reducing money in politics",
+    "Tax reform should ensure the wealthy pay their fair share while supporting middle class families"
+  ),
+  party = c("Democrat", "Republican", "Democrat", "Democrat", 
+            "Republican", "Democrat", "Democrat", "Republican"),
+  topic = c("Economy", "Security", "Environment", "Healthcare",
+            "Immigration", "Education", "Democracy", "Economy")
+)
+
+# Display the data
+political_texts
+```
+
+## 1.2 Basic Text Cleaning
+
+Before analysis, we need to clean our texts. Here's a typical preprocessing pipeline:
+
+```{r text-cleaning}
+# Function for basic text cleaning
+clean_text <- function(text) {
+  text %>%
+    str_to_lower() %>%                    # Convert to lowercase
+    str_replace_all("[[:punct:]]", " ") %>%  # Remove punctuation
+    str_replace_all("\\s+", " ") %>%         # Normalize whitespace
+    str_trim()                               # Trim leading/trailing spaces
+}
+
+# Apply cleaning
+political_texts <- political_texts %>%
+  mutate(text_clean = clean_text(text))
+
+# Compare original vs. cleaned
+political_texts %>%
+  select(doc_id, text, text_clean) %>%
+  head(3)
+```
+
+**Discussion Point:** When might we want to preserve punctuation or capitalization? Think about hashtags, named entities, or sentiment analysis.
+
+---
+
+# Part 2: Tokenization and Word Frequencies
+
+## 2.1 Unigram Tokenization
+
+Tokenization splits text into individual units (tokens). Let's start with unigrams (single words):
+
+```{r unigrams}
+# Tokenize into unigrams
+unigrams <- political_texts %>%
+  unnest_tokens(word, text_clean) %>%
+  select(doc_id, party, topic, word)
+
+# View first few tokens
+head(unigrams, 10)
+
+# Count total tokens
+cat("Total tokens:", nrow(unigrams), "\n")
+cat("Unique tokens:", n_distinct(unigrams$word), "\n")
+```
+
+## 2.2 Stop Words Removal
+
+Stop words (common words like "the", "and", "is") often don't carry much meaning. Let's remove them:
+
+```{r stop-words}
+# Load standard English stop words
+data("stop_words")
+
+# Remove stop words
+unigrams_clean <- unigrams %>%
+  anti_join(stop_words, by = "word")
+
+cat("Tokens after stop word removal:", nrow(unigrams_clean), "\n")
+cat("Unique tokens:", n_distinct(unigrams_clean$word), "\n")
+```
+
+## 2.3 Word Frequency Analysis
+
+```{r word-frequencies}
+# Calculate word frequencies
+word_freq <- unigrams_clean %>%
+  count(word, sort = TRUE)
+
+# Top 20 words
+top_words <- word_freq %>%
+  head(20)
+
+print(top_words)
+
+# Visualize top words
+ggplot(top_words, aes(x = reorder(word, n), y = n)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Top 20 Most Frequent Words",
+    subtitle = "After removing stop words",
+    x = NULL,
+    y = "Frequency"
+  )
+```
+
+## 2.4 Comparative Word Frequencies
+
+Let's compare word usage between Democrats and Republicans:
+
+```{r party-comparison}
+# Word frequencies by party
+party_words <- unigrams_clean %>%
+  count(party, word, sort = TRUE) %>%
+  group_by(party) %>%
+  slice_max(n, n = 10) %>%
+  ungroup()
+
+# Visualize
+ggplot(party_words, aes(x = reorder(word, n), y = n, fill = party)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~party, scales = "free") +
+  coord_flip() +
+  scale_fill_manual(values = c("Democrat" = "#4575b4", "Republican" = "#d73027")) +
+  labs(
+    title = "Top Words by Political Party",
+    x = NULL,
+    y = "Frequency"
+  )
+```
+
+---
+
+# Part 3: N-gram Analysis
+
+## 3.1 Bigrams (Two-word Sequences)
+
+Bigrams capture local context and common phrases:
+
+```{r bigrams}
+# Create bigrams
+bigrams <- political_texts %>%
+  unnest_tokens(bigram, text_clean, token = "ngrams", n = 2) %>%
+  select(doc_id, party, topic, bigram)
+
+head(bigrams, 10)
+
+# Count bigram frequencies
+bigram_freq <- bigrams %>%
+  count(bigram, sort = TRUE)
+
+print(head(bigram_freq, 15))
+```
+
+## 3.2 Filtering Bigrams
+
+Let's remove bigrams containing stop words for more meaningful patterns:
+
+```{r bigram-filtering}
+# Separate bigrams into two columns
+bigrams_separated <- bigrams %>%
+  separate(bigram, c("word1", "word2"), sep = " ")
+
+# Filter out stop words
+bigrams_filtered <- bigrams_separated %>%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word)
+
+# Count filtered bigrams
+bigram_counts <- bigrams_filtered %>%
+  count(word1, word2, sort = TRUE)
+
+# Reunite for display
+bigrams_united <- bigrams_filtered %>%
+  unite(bigram, word1, word2, sep = " ") %>%
+  count(bigram, sort = TRUE)
+
+print(head(bigrams_united, 15))
+```
+
+## 3.3 Bigram Network Visualization
+
+Visualizing bigrams as networks shows how words connect:
+
+```{r bigram-network, fig.height=8, fig.width=10}
+# Prepare network data (minimum frequency threshold)
+bigram_graph <- bigram_counts %>%
+  filter(n >= 2) %>%  # Adjust threshold as needed
+  graph_from_data_frame()
+
+# Set seed for reproducible layout
+set.seed(42)
+
+# Create network plot
+ggraph(bigram_graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n, edge_width = n),
+                 edge_colour = "steelblue",
+                 show.legend = FALSE) +
+  geom_node_point(size = 4, color = "darkred") +
+  geom_node_text(aes(label = name), 
+                 vjust = 1.5, 
+                 hjust = 1,
+                 size = 3.5) +
+  labs(title = "Bigram Network Graph",
+       subtitle = "Connections between frequently co-occurring words")
+```
+
+## 3.4 Trigrams (Three-word Sequences)
+
+Trigrams capture even more context:
+
+```{r trigrams}
+# Create trigrams
+trigrams <- political_texts %>%
+  unnest_tokens(trigram, text_clean, token = "ngrams", n = 3) %>%
+  count(trigram, sort = TRUE)
+
+print(head(trigrams, 15))
+
+# Separate and filter
+trigrams_separated <- political_texts %>%
+  unnest_tokens(trigram, text_clean, token = "ngrams", n = 3) %>%
+  separate(trigram, c("word1", "word2", "word3"), sep = " ") %>%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word,
+         !word3 %in% stop_words$word) %>%
+  unite(trigram, word1, word2, word3, sep = " ") %>%
+  count(trigram, sort = TRUE)
+
+print(head(trigrams_separated, 15))
+```
+
+---
+
+# Part 4: Document-Term Matrix (DTM)
+
+## 4.1 Creating a DTM with quanteda
+
+A document-term matrix represents documents as rows and terms as columns:
+
+```{r dtm-creation}
+# Create corpus object
+corp <- corpus(political_texts, text_field = "text_clean")
+
+# Create document-term matrix
+dtm <- corp %>%
+  tokens(remove_punct = TRUE) %>%
+  tokens_remove(stop_words$word) %>%
+  dfm()
+
+# Examine the DTM
+print(dtm)
+
+# View first few rows and columns
+head(convert(dtm, to = "data.frame"), 8)
+```
+
+## 4.2 DTM Properties
+
+```{r dtm-properties}
+# Matrix dimensions
+cat("Documents:", ndoc(dtm), "\n")
+cat("Features (unique terms):", nfeat(dtm), "\n")
+cat("Sparsity:", sparsity(dtm) %>% round(3), "\n")
+
+# Most frequent features
+topfeatures(dtm, 20)
+```
+
+## 4.3 Document Similarity
+
+```{r document-similarity}
+# Calculate cosine similarity between documents
+doc_similarity <- textstat_simil(dtm, method = "cosine")
+
+# Convert to matrix for viewing
+sim_matrix <- as.matrix(doc_similarity)
+rownames(sim_matrix) <- paste0("Doc", 1:8)
+colnames(sim_matrix) <- paste0("Doc", 1:8)
+
+# Display similarity matrix
+round(sim_matrix, 3)
+
+# Visualize as heatmap
+library(reshape2)
+melted_sim <- melt(sim_matrix)
+
+ggplot(melted_sim, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "white", high = "darkblue", 
+                       mid = "lightblue", midpoint = 0.5,
+                       limits = c(0, 1)) +
+  geom_text(aes(label = round(value, 2)), size = 3) +
+  labs(title = "Document Similarity Matrix",
+       subtitle = "Cosine similarity based on word frequencies",
+       x = NULL, y = NULL, fill = "Similarity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+---
+
+# Part 5: TF-IDF Weighting
+
+## 5.1 Understanding TF-IDF
+
+**TF-IDF** (Term Frequency - Inverse Document Frequency) identifies words that are distinctive to specific documents.
+
+- **TF**: How frequent is the term in this document?
+- **IDF**: How rare is the term across all documents?
+- **TF-IDF = TF × IDF**: High for terms that are frequent in one document but rare overall
+
+## 5.2 Computing TF-IDF
+
+```{r tfidf-calculation}
+# Calculate TF-IDF using tidytext
+tfidf_scores <- unigrams_clean %>%
+  count(doc_id, word) %>%
+  bind_tf_idf(word, doc_id, n) %>%
+  arrange(desc(tf_idf))
+
+# View highest TF-IDF scores
+head(tfidf_scores, 20)
+```
+
+## 5.3 Visualizing TF-IDF by Document
+
+```{r tfidf-by-doc, fig.height=10}
+# Top TF-IDF terms per document
+top_tfidf <- tfidf_scores %>%
+  group_by(doc_id) %>%
+  slice_max(tf_idf, n = 5) %>%
+  ungroup()
+
+# Visualize
+ggplot(top_tfidf, aes(x = reorder(word, tf_idf), y = tf_idf, fill = doc_id)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~doc_id, ncol = 2, scales = "free") +
+  coord_flip() +
+  labs(
+    title = "Top TF-IDF Terms by Document",
+    subtitle = "Words most distinctive to each document",
+    x = NULL,
+    y = "TF-IDF Score"
+  )
+```
+
+## 5.4 TF-IDF by Topic
+
+```{r tfidf-by-topic}
+# Join with metadata
+tfidf_with_meta <- unigrams_clean %>%
+  count(topic, word) %>%
+  bind_tf_idf(word, topic, n) %>%
+  arrange(desc(tf_idf))
+
+# Top terms by topic
+top_terms_topic <- tfidf_with_meta %>%
+  group_by(topic) %>%
+  slice_max(tf_idf, n = 5) %>%
+  ungroup()
+
+# Visualize
+ggplot(top_terms_topic, aes(x = reorder(word, tf_idf), y = tf_idf, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip() +
+  labs(
+    title = "Distinctive Terms by Topic",
+    subtitle = "TF-IDF scores reveal topic-specific vocabulary",
+    x = NULL,
+    y = "TF-IDF Score"
+  )
+```
+
+---
+
+# Part 6: Advanced Visualizations
+
+## 6.1 Word Clouds
+
+```{r wordcloud}
+# Word cloud of most frequent terms
+set.seed(42)
+wordcloud(
+  words = word_freq$word,
+  freq = word_freq$n,
+  min.freq = 1,
+  max.words = 50,
+  random.order = FALSE,
+  rot.per = 0.35,
+  colors = brewer.pal(8, "Dark2")
+)
+title("Word Cloud: Most Frequent Terms")
+```
+
+## 6.2 Comparison Cloud
+
+```{r comparison-cloud, fig.height=8, fig.width=10}
+# Prepare data for comparison cloud
+party_word_matrix <- unigrams_clean %>%
+  count(party, word) %>%
+  pivot_wider(names_from = party, values_from = n, values_fill = 0) %>%
+  column_to_rownames("word")
+
+# Create comparison cloud
+set.seed(42)
+comparison.cloud(
+  party_word_matrix,
+  max.words = 40,
+  random.order = FALSE,
+  title.size = 1.5,
+  colors = c("#4575b4", "#d73027")
+)
+title("Comparison Cloud: Democrat vs. Republican Language")
+```
+
+## 6.3 Term Co-occurrence Heatmap
+
+```{r cooccurrence}
+# Create co-occurrence matrix for top terms
+top_20_words <- word_freq %>% head(20) %>% pull(word)
+
+# Calculate co-occurrence
+cooc_matrix <- fcm(dtm, context = "document")
+cooc_subset <- cooc_matrix[top_20_words, top_20_words]
+
+# Convert to data frame for plotting
+cooc_df <- as.matrix(cooc_subset) %>%
+  melt()
+names(cooc_df)[1] <- "Var1"
+names(cooc_df)[2] <- "Var2"
+
+# Plot heatmap
+ggplot(cooc_df, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "darkred") +
+  labs(
+    title = "Word Co-occurrence Heatmap",
+    subtitle = "Frequency of words appearing together in documents",
+    x = NULL, y = NULL, fill = "Co-occurrence"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+---
+
+# Part 7: Connecting to Grimmer & Stewart (2013)
+
+## Key Insights from "Text as Data"
+
+The paper emphasizes several points relevant to this week's work:
+
+### 1. **All Methods Have Assumptions**
+
+Even simple word counts make assumptions:
+- Words are meaningful units of analysis
+- Word frequency reflects importance
+- Context doesn't fundamentally change meaning
+
+**Exercise:** Find an example in your data where word frequency alone is misleading.
+
+### 2. **Validation is Essential**
+
+```{r validation-example}
+# Example: Are "security" and "healthcare" truly distinctive topics?
+topic_validation <- tfidf_with_meta %>%
+  filter(word %in% c("security", "healthcare", "economic", "climate")) %>%
+  select(topic, word, tf_idf) %>%
+  pivot_wider(names_from = word, values_from = tf_idf, values_fill = 0)
+
+print(topic_validation)
+```
+
+**Question:** Do the TF-IDF scores align with our understanding of these topics?
+
+### 3. **Simple Methods Can Be Powerful**
+
+Before jumping to complex models, establish baselines:
+
+```{r baseline-comparison}
+# Compare different grouping strategies
+party_comparison <- unigrams_clean %>%
+  count(party, word) %>%
+  group_by(party) %>%
+  mutate(proportion = n / sum(n)) %>%
+  select(party, word, proportion) %>%
+  pivot_wider(names_from = party, values_from = proportion, values_fill = 0) %>%
+  mutate(difference = Democrat - Republican) %>%
+  arrange(desc(abs(difference)))
+
+print(head(party_comparison, 15))
+```
+
+### 4. **Interpretation Over Automation**
+
+Technology doesn't replace substantive expertise:
+
+```{r substantive-interpretation}
+# Which words matter most for YOUR research question?
+research_keywords <- c("democracy", "security", "economic", "healthcare", "climate")
+
+keyword_analysis <- unigrams_clean %>%
+  filter(word %in% research_keywords) %>%
+  count(topic, word) %>%
+  pivot_wider(names_from = word, values_from = n, values_fill = 0)
+
+print(keyword_analysis)
+```
+
+---
+
+# Part 8: Your Turn - Practical Exercises
+
+## Exercise 1: Analyze Your Own Data
+
+```{r exercise-1, eval=FALSE}
+# Load your dissertation corpus
+# my_data <- read_csv("path/to/your/data.csv")
+
+# Steps:
+# 1. Clean the text
+# 2. Tokenize into unigrams
+# 3. Remove stop words
+# 4. Calculate word frequencies
+# 5. Create visualizations
+
+# Your code here:
+
+```
+
+## Exercise 2: Compare Document Groups
+
+```{r exercise-2, eval=FALSE}
+# Identify 2+ meaningful groups in your corpus
+# (e.g., time periods, speakers, countries)
+
+# Calculate TF-IDF by group
+# Visualize distinctive terms
+# Interpret the results
+
+# Your code here:
+
+```
+
+## Exercise 3: Bigram Analysis
+
+```{r exercise-3, eval=FALSE}
+# Extract bigrams from your corpus
+# Filter for meaningful patterns
+# Create a network visualization
+# Identify 5+ interesting bigrams and explain their significance
+
+# Your code here:
+
+```
+
+## Exercise 4: Document Similarity
+
+```{r exercise-4, eval=FALSE}
+# Build a DTM from your corpus
+# Calculate document similarity
+# Create a heatmap
+# Which documents are most similar? Why?
+
+# Your code here:
+
+```
+
+---
+
+# Week 1 Deliverables Checklist
+
+For your assignment, complete the following:
+
+- [ ] **Data Preparation**
+  - Clean and preprocess 50+ documents from your corpus
+  - Create metadata for grouping (e.g., source, date, topic)
+
+- [ ] **Frequency Analysis**
+  - Generate unigram frequency table
+  - Create top words visualization
+  - Produce comparison cloud (2+ groups)
+
+- [ ] **N-gram Analysis**
+  - Extract and count bigrams
+  - Create bigram network visualization
+  - Extract and analyze trigrams
+  - Identify 10+ meaningful n-grams
+
+- [ ] **TF-IDF Analysis**
+  - Calculate TF-IDF scores by document
+  - Calculate TF-IDF scores by group
+  - Create visualizations showing distinctive terms
+  - Identify 5+ distinctive terms per group
+
+- [ ] **Written Reflection (1 page)**
+  - How do Grimmer & Stewart's insights apply to your research?
+  - What did simple frequency methods reveal?
+  - Where did these methods fall short?
+  - What questions remain for more advanced techniques?
+
+---
+
+# Additional Resources
+
+## R Documentation
+
+- `tidytext`: https://www.tidytextmining.com/
+- `quanteda`: https://quanteda.io/
+- Text Mining with R (book): https://www.tidytextmining.com/
+
+## Papers for Deeper Dive
+
+- Benoit et al. (2018) - quanteda package overview
+- Young & Soroka (2012) - Automated sentiment coding
+- Grimmer, Roberts & Stewart (2022) - Text as Data textbook
+
+## Helpful R Cheatsheets
+
+- tidytext: https://github.com/rstudio/cheatsheets/blob/main/tidytext.pdf
+- dplyr: https://github.com/rstudio/cheatsheets/blob/main/data-transformation.pdf
+
+---
+
+# Summary
+
+This week, we covered:
+
+✅ **Text preprocessing** - cleaning and normalizing political texts  
+✅ **Tokenization** - breaking text into unigrams, bigrams, and trigrams  
+✅ **Frequency analysis** - counting and comparing word usage  
+✅ **Document-term matrices** - representing texts numerically  
+✅ **TF-IDF** - identifying distinctive terms  
+✅ **Visualization** - word clouds, networks, and heatmaps
+
+**Next Week Preview:** We'll move from counting words to understanding their meaning through word embeddings (Word2Vec, GloVe), exploring how words relate to each other in semantic space.
+
+**Remember Grimmer & Stewart's key message:** All quantitative text methods make assumptions. Always validate your findings against substantive knowledge and research questions. Simple, interpretable methods often provide the best starting point.
+
+
+```{r session-info}
+sessionInfo()
+```
