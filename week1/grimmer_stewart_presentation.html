@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text as Data: Grimmer & Stewart (2013)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/serif.css">
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+        }
+        .reveal h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+        }
+        .reveal h2 {
+            font-size: 1.8em;
+            color: #34495e;
+        }
+        .reveal h3 {
+            font-size: 1.4em;
+            color: #7f8c8d;
+        }
+        .reveal {
+            font-size: 32px;
+        }
+        .reveal ul, .reveal ol {
+            margin-top: 0.5em;
+        }
+        .reveal li {
+            margin-bottom: 0.5em;
+        }
+        .principle-box {
+            background-color: #ecf0f1;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .warning-box {
+            background-color: #fff5e6;
+            border-left: 5px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .method-box {
+            background-color: #e8f5e9;
+            border-left: 5px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .quote {
+            font-style: italic;
+            color: #555;
+            border-left: 3px solid #ccc;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+        .small-text {
+            font-size: 0.7em;
+        }
+        .citation {
+            font-size: 0.6em;
+            color: #7f8c8d;
+            margin-top: 2em;
+        }
+        .columns {
+            display: flex;
+            gap: 2em;
+        }
+        .column {
+            flex: 1;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .fragment.current-visible.visible:not(.current-fragment) {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Title Slide -->
+            <section>
+                <h1>Text as Data</h1>
+                <h3>The Promise and Pitfalls of Automatic Content Analysis Methods for Political Texts</h3>
+                <p style="margin-top: 2em;">
+                    <strong>Justin Grimmer & Brandon M. Stewart</strong><br>
+                    <em>Political Analysis</em>, 2013
+                </p>
+                <p style="margin-top: 2em; font-size: 0.8em;">
+                    Week 1: NLP for Political Science<br>
+                    November 2025
+                </p>
+            </section>
+
+            <!-- Why This Paper Matters -->
+            <section>
+                <h2>Why This Paper Matters</h2>
+                <ul>
+                    <li class="fragment">Foundational text for computational political science</li>
+                    <li class="fragment">Over 3,000 citations (as of 2024)</li>
+                    <li class="fragment">Provides <span class="highlight">principles</span> not just techniques</li>
+                    <li class="fragment">Required reading before diving into any text analysis</li>
+                </ul>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    "All quantitative models of language are wrong—but some are useful."
+                </p>
+            </section>
+
+            <!-- The Context -->
+            <section>
+                <h2>The Challenge</h2>
+                <div class="columns">
+                    <div class="column">
+                        <h3>Then (2013)</h3>
+                        <ul>
+                            <li>Growing computational power</li>
+                            <li>Explosion of digital text</li>
+                            <li>New methods emerging rapidly</li>
+                            <li>Lack of clear standards</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>Now (2025)</h3>
+                        <ul>
+                            <li>LLMs and transformers</li>
+                            <li>Even more text data</li>
+                            <li>Even more complex methods</li>
+                            <li><span class="highlight">Principles still apply!</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Three Principles: Introduction -->
+            <section>
+                <h2>The Three Core Principles</h2>
+                <p style="font-size: 1.2em; margin-top: 1em;">Grimmer & Stewart argue that all automated text analysis should follow three fundamental principles:</p>
+                <ol style="margin-top: 1em; font-size: 0.9em;">
+                    <li class="fragment"><strong>All methods make assumptions</strong></li>
+                    <li class="fragment"><strong>Validation is essential</strong></li>
+                    <li class="fragment"><strong>Models augment, not replace, human understanding</strong></li>
+                </ol>
+                <p class="fragment" style="margin-top: 1.5em; color: #e74c3c;">
+                    <strong>Let's examine each in detail...</strong>
+                </p>
+            </section>
+
+            <!-- Principle 1 -->
+            <section>
+                <h2>Principle 1: All Methods Make Assumptions</h2>
+                <div class="principle-box">
+                    <p><strong>"All quantitative models of language are wrong—but some are useful"</strong></p>
+                </div>
+                <ul style="margin-top: 1em;">
+                    <li class="fragment"><strong>Bag of Words:</strong> Assumes word order doesn't matter</li>
+                    <li class="fragment"><strong>Dictionary Methods:</strong> Assume words have fixed meanings</li>
+                    <li class="fragment"><strong>Topic Models:</strong> Assume documents are mixtures of topics</li>
+                    <li class="fragment"><strong>Even BERT:</strong> Assumes patterns in training data generalize</li>
+                </ul>
+                <p class="fragment warning-box small-text" style="margin-top: 1em;">
+                    ⚠️ <strong>Key Point:</strong> No "assumption-free" method exists. Always ask: What assumptions am I making?
+                </p>
+            </section>
+
+            <!-- Principle 1: Examples -->
+            <section>
+                <h2>When Assumptions Fail</h2>
+                <div class="columns">
+                    <div class="column">
+                        <h3>Example 1: "Bank"</h3>
+                        <ul class="small-text">
+                            <li>"The <strong>bank</strong> collapsed" (financial)</li>
+                            <li>"Walk along the river <strong>bank</strong>" (geographic)</li>
+                        </ul>
+                        <p class="small-text fragment"><span class="highlight">Bag of words assumption fails</span> — context matters!</p>
+                    </div>
+                    <div class="column fragment">
+                        <h3>Example 2: Sarcasm</h3>
+                        <ul class="small-text">
+                            <li>"Great job!" (positive?)</li>
+                            <li>"<em>Great</em> job..." (negative?)</li>
+                        </ul>
+                        <p class="small-text fragment"><span class="highlight">Dictionary methods fail</span> — tone matters!</p>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-size: 0.8em; font-style: italic;">
+                    This is why validation (Principle 2) is crucial!
+                </p>
+            </section>
+
+            <!-- Principle 2 -->
+            <section>
+                <h2>Principle 2: Validation is Essential</h2>
+                <div class="principle-box">
+                    <p><strong>"No substitutes for actually reading documents and qualitative analysis"</strong></p>
+                </div>
+                <div class="fragment" style="margin-top: 1em;">
+                    <h3>Types of Validation:</h3>
+                    <ul>
+                        <li><strong>Face Validity:</strong> Do results make substantive sense?</li>
+                        <li><strong>Convergent Validity:</strong> Do different methods agree?</li>
+                        <li><strong>Predictive Validity:</strong> Do results predict outcomes?</li>
+                        <li><strong>Comparison to Gold Standard:</strong> Agreement with human coding?</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Validation Examples -->
+            <section>
+                <h2>Validation in Practice</h2>
+                <div class="method-box">
+                    <p class="small-text"><strong>Example: Topic Model of Congressional Speeches</strong></p>
+                    <ol class="small-text">
+                        <li class="fragment"><strong>Face Validity:</strong> Do topics have coherent themes?
+                            <ul><li>Topic 1: "healthcare, insurance, coverage" ✓</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Read Documents:</strong> Examine high-probability speeches
+                            <ul><li>Are they actually about healthcare? ✓</li></ul>
+                        </li>
+                        <li class="fragment"><strong>External Evidence:</strong> Do results align with known facts?
+                            <ul><li>Healthcare topic peaks during ACA debate? ✓</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Hand-Coding Sample:</strong> Compare to expert judgments
+                            <ul><li>Agreement rate: 85% ✓</li></ul>
+                        </li>
+                    </ol>
+                </div>
+                <p class="fragment warning-box small-text">
+                    ⚠️ Never report results without validation!
+                </p>
+            </section>
+
+            <!-- Principle 3 -->
+            <section>
+                <h2>Principle 3: Models Augment Humans</h2>
+                <div class="principle-box">
+                    <p><strong>"Automated methods augment, rather than replace, careful thinking and close reading"</strong></p>
+                </div>
+                <div class="fragment columns" style="margin-top: 1em;">
+                    <div class="column">
+                        <h3>❌ Don't</h3>
+                        <ul class="small-text">
+                            <li>Blindly trust algorithms</li>
+                            <li>Skip reading documents</li>
+                            <li>Ignore domain expertise</li>
+                            <li>Let method drive theory</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3>✅ Do</h3>
+                        <ul class="small-text">
+                            <li>Use methods to scale up analysis</li>
+                            <li>Combine with close reading</li>
+                            <li>Ground in substantive theory</li>
+                            <li>Let questions drive methods</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Research Process -->
+            <section>
+                <h2>The Right Research Process</h2>
+                <div style="text-align: center; margin: 2em 0;">
+                    <div class="fragment" style="background: #3498db; color: white; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                        1. <strong>Research Question</strong> (substantive theory)
+                    </div>
+                    <div class="fragment" style="font-size: 2em; margin: 10px 0;">↓</div>
+                    <div class="fragment" style="background: #27ae60; color: white; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                        2. <strong>Choose Method</strong> (based on assumptions)
+                    </div>
+                    <div class="fragment" style="font-size: 2em; margin: 10px 0;">↓</div>
+                    <div class="fragment" style="background: #e74c3c; color: white; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                        3. <strong>Validate Results</strong> (multiple strategies)
+                    </div>
+                    <div class="fragment" style="font-size: 2em; margin: 10px 0;">↓</div>
+                    <div class="fragment" style="background: #f39c12; color: white; padding: 15px; margin: 10px 0; border-radius: 5px;">
+                        4. <strong>Substantive Interpretation</strong> (with domain knowledge)
+                    </div>
+                </div>
+            </section>
+
+            <!-- Common Pitfalls -->
+            <section>
+                <h2>Common Pitfalls to Avoid</h2>
+                <ol>
+                    <li class="fragment"><strong>The "Cool Method" Trap</strong>
+                        <p class="small-text">Using advanced methods because they're trendy, not because they fit the question</p>
+                    </li>
+                    <li class="fragment"><strong>Black Box Analysis</strong>
+                        <p class="small-text">Not understanding what your method actually does</p>
+                    </li>
+                    <li class="fragment"><strong>Over-claiming</strong>
+                        <p class="small-text">Asserting methods reveal "truth" rather than useful patterns</p>
+                    </li>
+                    <li class="fragment"><strong>Ignoring Limitations</strong>
+                        <p class="small-text">Not discussing when/why your method might fail</p>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- Methods Overview -->
+            <section>
+                <h2>Overview of Methods (G&S Taxonomy)</h2>
+                <table style="font-size: 0.7em; width: 100%;">
+                    <thead>
+                        <tr style="background: #3498db; color: white;">
+                            <th>Method Type</th>
+                            <th>Examples</th>
+                            <th>Key Assumption</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="fragment">
+                            <td><strong>Dictionary</strong></td>
+                            <td>Word counting, sentiment</td>
+                            <td>Words have fixed meanings</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Supervised</strong></td>
+                            <td>Classification, SVM</td>
+                            <td>Hand-coded sample generalizes</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Unsupervised</strong></td>
+                            <td>Topic models, clustering</td>
+                            <td>Latent structure exists</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Semi-supervised</strong></td>
+                            <td>Seeded LDA</td>
+                            <td>Prior knowledge + data patterns</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="fragment" style="margin-top: 1em; font-size: 0.8em; font-style: italic;">
+                    Each has strengths and weaknesses — choose based on your question!
+                </p>
+            </section>
+
+            <!-- When to Use What -->
+            <section>
+                <h2>Decision Tree: Choosing Methods</h2>
+                <div style="font-size: 0.75em; text-align: left;">
+                    <p class="fragment"><strong>Q: Do you have labeled training data?</strong></p>
+                    <ul class="fragment">
+                        <li><strong>Yes →</strong> Supervised learning (Week 3-4)
+                            <ul><li>Classification, regression on text</li></ul>
+                        </li>
+                        <li><strong>No →</strong> Ask next question...</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 0.5em;"><strong>Q: Do you know what categories you're looking for?</strong></p>
+                    <ul class="fragment">
+                        <li><strong>Yes →</strong> Dictionary methods (Week 1)
+                            <ul><li>Word frequency, keyword analysis</li></ul>
+                        </li>
+                        <li><strong>No →</strong> Unsupervised methods
+                            <ul><li>Topic modeling, clustering (future weeks)</li></ul>
+                        </li>
+                    </ul>
+                    <p class="fragment warning-box small-text" style="margin-top: 1em;">
+                        Remember: Simpler methods often outperform complex ones!
+                    </p>
+                </div>
+            </section>
+
+            <!-- Practical Advice -->
+            <section>
+                <h2>Practical Advice from G&S</h2>
+                <div class="columns small-text">
+                    <div class="column">
+                        <h3>Before Analysis</h3>
+                        <ul>
+                            <li>Read your documents!</li>
+                            <li>Understand context</li>
+                            <li>Know the literature</li>
+                            <li>Have clear questions</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>During Analysis</h3>
+                        <ul>
+                            <li>Start simple</li>
+                            <li>Examine diagnostics</li>
+                            <li>Check edge cases</li>
+                            <li>Compare methods</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="columns small-text" style="margin-top: 1em;">
+                    <div class="column fragment">
+                        <h3>After Analysis</h3>
+                        <ul>
+                            <li>Validate thoroughly</li>
+                            <li>Report limitations</li>
+                            <li>Show examples</li>
+                            <li>Enable replication</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>In Writing</h3>
+                        <ul>
+                            <li>Explain assumptions</li>
+                            <li>Show validation</li>
+                            <li>Use appendices</li>
+                            <li>Share code/data</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Case Study -->
+            <section>
+                <h2>Case Study: Senate Press Releases</h2>
+                <div class="small-text">
+                    <p><strong>Research Question:</strong> What do senators emphasize in communications?</p>
+                    <div class="fragment method-box">
+                        <p><strong>Method 1: Simple Word Counting</strong></p>
+                        <ul>
+                            <li>Count frequency of policy terms</li>
+                            <li>✓ Transparent, interpretable</li>
+                            <li>✗ Misses context, synonyms</li>
+                        </ul>
+                    </div>
+                    <div class="fragment method-box">
+                        <p><strong>Method 2: Topic Model</strong></p>
+                        <ul>
+                            <li>Discovers latent themes</li>
+                            <li>✓ Finds unexpected patterns</li>
+                            <li>✗ Topics need interpretation</li>
+                        </ul>
+                    </div>
+                    <p class="fragment" style="margin-top: 0.5em;"><strong>G&S Recommendation:</strong> Use both! Triangulate findings.</p>
+                </div>
+            </section>
+
+            <!-- Validation Example -->
+            <section>
+                <h2>Example Validation Strategy</h2>
+                <div class="small-text">
+                    <p><strong>Goal:</strong> Classify Congressional speeches as "bipartisan" vs "partisan"</p>
+                    <ol>
+                        <li class="fragment"><strong>Train classifier</strong> on hand-coded sample (n=500)</li>
+                        <li class="fragment"><strong>Check accuracy</strong> on held-out test set (85%)</li>
+                        <li class="fragment"><strong>Examine errors:</strong> Where does it fail?
+                            <ul><li>Short speeches, procedural language</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Face validity:</strong> Do high-probability cases make sense?
+                            <ul><li>Read 20 random "highly partisan" speeches</li></ul>
+                        </li>
+                        <li class="fragment"><strong>External validity:</strong> Do patterns match known facts?
+                            <ul><li>Partisan speech increases near elections? ✓</li></ul>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Relation to Week 1 -->
+            <section>
+                <h2>Connecting to Week 1 Lab</h2>
+                <div class="columns small-text">
+                    <div class="column">
+                        <h3>What We're Doing</h3>
+                        <ul>
+                            <li>Word frequencies</li>
+                            <li>N-grams</li>
+                            <li>TF-IDF</li>
+                            <li>Document similarity</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>G&S Principles</h3>
+                        <ul>
+                            <li><span class="highlight">Assumptions:</span> Bag of words</li>
+                            <li><span class="highlight">Validation:</span> Do results make sense?</li>
+                            <li><span class="highlight">Augmentation:</span> Start simple!</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    Simple frequency methods are powerful when validated properly!
+                </p>
+            </section>
+
+            <!-- Critical Questions -->
+            <section>
+                <h2>Critical Questions to Always Ask</h2>
+                <ol>
+                    <li class="fragment">What <span class="highlight">assumptions</span> does my method make?</li>
+                    <li class="fragment">Where might those assumptions <span class="highlight">fail</span>?</li>
+                    <li class="fragment">How can I <span class="highlight">validate</span> my results?</li>
+                    <li class="fragment">Do findings align with <span class="highlight">substantive knowledge</span>?</li>
+                    <li class="fragment">Am I using the <span class="highlight">simplest</span> appropriate method?</li>
+                    <li class="fragment">Can I <span class="highlight">replicate</span> my analysis?</li>
+                    <li class="fragment">What are the <span class="highlight">limitations</span> of my approach?</li>
+                </ol>
+            </section>
+
+            <!-- Contemporary Relevance -->
+            <section>
+                <h2>Still Relevant in the LLM Era?</h2>
+                <div class="fragment" style="margin-top: 1em;">
+                    <h3>Absolutely Yes!</h3>
+                    <ul>
+                        <li class="fragment"><strong>GPT-4, Claude, etc. still make assumptions</strong>
+                            <ul class="small-text"><li>Training data biases, context windows, prompting effects</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Validation even more critical</strong>
+                            <ul class="small-text"><li>Black box nature makes errors harder to catch</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Human understanding still essential</strong>
+                            <ul class="small-text"><li>LLMs can't replace domain expertise</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Simple methods often better</strong>
+                            <ul class="small-text"><li>More interpretable, faster, cheaper, reproducible</li></ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Key Takeaways -->
+            <section>
+                <h2>Key Takeaways</h2>
+                <div class="principle-box">
+                    <ol>
+                        <li><strong>All quantitative models of language are wrong—but some are useful</strong>
+                            <p class="small-text">Understand and state your assumptions</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Validate, validate, validate</strong>
+                            <p class="small-text">Multiple strategies, always read documents</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Let questions drive methods, not the reverse</strong>
+                            <p class="small-text">Start simple, add complexity only when needed</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Combine computational and human analysis</strong>
+                            <p class="small-text">Algorithms augment, not replace, expertise</p>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- The Big Picture -->
+            <!-- <section>
+                <h2>The Big Picture</h2>
+                <div class="quote">
+                    "Automated content analysis methods are <strong>no substitute</strong> for careful thought and close reading. <strong>But</strong> when used properly, these methods can <strong>help social scientists discover</strong> important features of texts at a <strong>scale that would be impossible</strong> through human reading alone."
+                    <p style="text-align: right; margin-top: 1em;">— Grimmer & Stewart, 2013</p>
+                </div>
+                <p class="fragment" style="margin-top: 1.5em; font-size: 1.1em; text-align: center;">
+                    <strong>This is what we're learning to do this month!</strong>
+                </p>
+            </section> -->
+
+            <!-- Discussion Questions -->
+            <section>
+                <h2>Things to Think About</h2>
+                <ol>
+                    <li class="fragment">Think about your dissertation research: What assumptions would a bag-of-words approach make? Where might it fail?</li>
+                    <li class="fragment">How would you validate findings from your corpus?</li>
+                    <li class="fragment">When would you choose simple frequency methods over more complex approaches?</li>
+                    <li class="fragment">What role should domain expertise play alongside computational methods?</li>
+                </ol>
+            </section>
+
+            <!-- Assignment Connection -->
+            <section>
+                <h2>This Week's Assignment</h2>
+                <div class="small-text">
+                    <p><strong>Apply G&S principles to your corpus:</strong></p>
+                    <ul>
+                        <li class="fragment"><strong>State Assumptions</strong>
+                            <ul><li>What does bag-of-words assume about your texts?</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Validate Results</strong>
+                            <ul><li>Do TF-IDF results align with your knowledge?</li>
+                            <li>Sample and read high-scoring documents</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Augment Understanding</strong>
+                            <ul><li>What did computational methods reveal?</li>
+                            <li>What did they miss that you know from reading?</li></ul>
+                        </li>
+                        <!-- <li class="fragment"><strong>Reflect Critically</strong>
+                            <ul><li>1-page reflection: when did methods work? When did they fail?</li></ul>
+                        </li> -->
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Further Reading -->
+            <section>
+                <h2>Further Reading</h2>
+                <div class="small-text">
+                    <p><strong>Follow-up by same authors:</strong></p>
+                    <ul>
+                        <li>Grimmer, Roberts & Stewart (2022). <em>Text as Data: A New Framework for Machine Learning and the Social Sciences</em>. Princeton UP.</li>
+                    </ul>
+                    <p style="margin-top: 1em;"><strong>Complementary perspectives:</strong></p>
+                    <ul>
+                        <li>Denny & Spirling (2018). "Text Preprocessing For Unsupervised Learning"</li>
+                        <li>Benoit et al. (2016). "Crowd-sourced text analysis"</li>
+                        <li>Nelson (2020). "Computational Grounded Theory"</li>
+                    </ul>
+                    <p style="margin-top: 1em;"><strong>Critical takes:</strong></p>
+                    <ul>
+                        <li>Bender & Koller (2020). "Climbing towards NLU: On Meaning, Form, and Understanding"</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Closing -->
+            <!-- <section>
+                <h2>Remember...</h2>
+                <div style="font-size: 1.2em; text-align: center; margin: 2em 0;">
+                    <p class="fragment" style="margin: 1em 0;">📊 <strong>Methods are tools, not magic</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">✅ <strong>Validation is not optional</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">🧠 <strong>Your expertise matters</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">❓ <strong>Always ask: What assumptions am I making?</strong></p>
+                </div>
+                <p class="fragment" style="margin-top: 2em; font-size: 0.9em;">
+                    Questions? Let's discuss!
+                </p>
+            </section> -->
+
+            <!-- Thank You -->
+            <section>
+                <h1>Thank You!</h1>
+                <div style="margin-top: 2em;">
+                    <p>Now let's apply these principles in the lab...</p>
+                </div>
+                <div class="citation">
+                    <p><strong>Full Citation:</strong><br>
+                    Grimmer, Justin, and Brandon M. Stewart. 2013. "Text as Data: The Promise and Pitfalls of Automatic Content Analysis Methods for Political Texts." <em>Political Analysis</em> 21(3): 267-297.</p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: true,
+            transition: 'slide',
+            width: 1200,
+            height: 700,
+            margin: 0.04,
+            controls: true,
+            progress: true,
+            center: true,
+            fragments: true
+        });
+    </script>
+</body>
+</html>
