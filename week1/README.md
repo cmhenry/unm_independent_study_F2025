@@ -1,8 +1,3 @@
----
-title: "Week 1 Readme"
-output: html_document
----
-
 
 # Week 1 Setup Guide
 ## Getting Started with R for NLP
