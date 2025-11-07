@@ -1,0 +1,1142 @@
+---
+title: "Week 2: Vector Representations & Word Embeddings"
+subtitle: "NLP for Political Science - November 2025"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+```
+
+# Introduction
+
+Welcome to Week 2! Last week, we worked with bag-of-words representations and frequency-based methods. This week, we move beyond counting to **meaning**.
+
+**Key Question:** How can we capture semantic relationships between words and use them to understand political texts more deeply?
+
+**This Week's Paper:** Rodriguez & Spirling (2022) - "Word Embeddings: What Works, What Doesn't, and How to Tell the Difference for Applied Research"
+
+## Learning Objectives
+
+By the end of this notebook, you will be able to:
+
+1. Understand the limitations of bag-of-words representations
+2. Explain how word embeddings capture semantic meaning
+3. Train custom Word2Vec models on political corpora
+4. Use pre-trained embeddings (GloVe)
+5. Compute semantic similarity between words and documents
+6. Perform analogy tasks (e.g., "democracy" - "freedom" + "control" = ?)
+7. Visualize embedding spaces with dimensionality reduction
+8. Compare bag-of-words vs. embedding-based approaches
+9. Validate embedding quality for political science research
+
+---
+
+# Setup and Installation
+
+## Required Packages
+
+```{r install-packages, eval=FALSE}
+# Run this once to install required packages
+install.packages(c(
+  # Word embeddings
+  "word2vec",      # Train Word2Vec models
+  "text2vec",      # Text vectorization and embeddings
+  "text",          # Interface to transformers (requires Python)
+  
+  # From Week 1
+  "tidytext",
+  "quanteda",
+  "dplyr",
+  "tidyr",
+  "stringr",
+  
+  # Visualization
+  "ggplot2",
+  "ggrepel",       # Better text labels
+  "Rtsne",         # t-SNE dimensionality reduction
+  "uwot",          # UMAP (alternative to t-SNE)
+  
+  # Utilities
+  "widyr",         # Pairwise operations
+  "proxy"          # Distance/similarity metrics
+))
+```
+
+## Load Libraries
+
+```{r load-libraries}
+library(word2vec)
+library(text2vec)
+library(tidytext)
+library(quanteda)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(ggrepel)
+library(widyr)
+
+# Set theme
+theme_set(theme_minimal(base_size = 12))
+
+# Set seed for reproducibility
+set.seed(42)
+```
+
+---
+
+# Part 1: Limitations of Bag-of-Words
+
+## 1.1 What We Learned Last Week
+
+Last week, we represented texts as bags of words: just counts, ignoring order and context.
+
+```{r bow-review}
+# Sample political texts
+texts <- c(
+  "The democratic government protects civil rights and freedoms",
+  "The autocratic regime violates human rights and freedoms",
+  "Economic freedom drives market growth and prosperity",
+  "Government regulation limits market freedom and growth"
+)
+
+# Create bag-of-words representation
+bow_tokens <- tibble(text = texts, doc_id = paste0("doc_", 1:4)) %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word")
+
+# Word frequencies
+bow_freq <- bow_tokens %>%
+  count(word, sort = TRUE)
+
+print(bow_freq)
+```
+
+## 1.2 Problem 1: No Semantic Information
+
+Words that mean similar things are treated as completely unrelated:
+
+```{r bow-limitations-1}
+# These words never co-occur in our small corpus, so BoW treats them as unrelated
+similar_words <- c("democratic", "autocratic", "regime", "government")
+
+bow_tokens %>%
+  filter(word %in% similar_words) %>%
+  count(doc_id, word) %>%
+  pivot_wider(names_from = word, values_from = n, values_fill = 0)
+```
+
+**Issue:** "democratic" and "government" appear together, but we have no way to know that "regime" and "government" are semantically related, or that "democratic" and "autocratic" are antonyms.
+
+## 1.3 Problem 2: Synonyms Are Separate Features
+
+```{r bow-limitations-2}
+synonym_examples <- tibble(
+  text = c(
+    "The nation faces economic challenges",
+    "The country faces fiscal problems",
+    "The state confronts monetary issues"
+  )
+)
+
+# BoW treats these as completely different
+synonym_examples %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word") %>%
+  count(word, sort = TRUE)
+```
+
+**Issue:** "nation", "country", "state" are synonyms, but BoW treats them as unrelated. Same with "challenges", "problems", "issues" and "economic", "fiscal", "monetary".
+
+## 1.4 Problem 3: High Dimensionality, Extreme Sparsity
+
+```{r bow-limitations-3}
+# Even with small corpus, BoW creates sparse matrices
+corp <- corpus(texts)
+dtm <- corp %>%
+  tokens() %>%
+  tokens_remove(stop_words$word) %>%
+  dfm()
+
+cat("Dimensions:", dim(dtm)[1], "docs x", dim(dtm)[2], "features\n")
+cat("Sparsity:", sparsity(dtm), "\n")
+cat("Most cells are zero:", mean(as.matrix(dtm) == 0) * 100, "%\n")
+```
+
+**Issue:** Real corpora have 10,000+ unique words. BoW creates huge, sparse matrices that waste memory and computational resources.
+
+---
+
+# Part 2: Introduction to Word Embeddings
+
+## 2.1 Core Idea: Distributional Semantics
+
+> "You shall know a word by the company it keeps." — J.R. Firth (1957)
+
+**Key Insight:** Words that appear in similar contexts tend to have similar meanings.
+
+```{r distributional-hypothesis}
+# Example context windows
+contexts <- tibble(
+  center_word = c("democracy", "autocracy"),
+  contexts = c(
+    "free elections, civil rights, rule of law, freedom",
+    "authoritarian rule, repression, dictatorship, control"
+  )
+)
+
+print(contexts)
+```
+
+Even though "democracy" and "autocracy" are opposites, they appear in similar **types** of contexts (political systems), which makes them semantically related in embedding space.
+
+## 2.2 From Words to Vectors
+
+**Word Embeddings** represent each word as a dense vector of real numbers (typically 50-300 dimensions).
+
+```{r embedding-concept, eval=FALSE}
+# Conceptual representation
+"democracy" → [0.42, -0.13, 0.67, ..., 0.31]  # 300 numbers
+"freedom"   → [0.38, -0.09, 0.71, ..., 0.28]  # 300 numbers
+"banana"    → [-0.15, 0.82, -0.44, ..., 0.53] # 300 numbers
+```
+
+**Key Properties:**
+- **Dense:** Every dimension has a value (not sparse like BoW)
+- **Low-dimensional:** 50-300 dimensions vs. 10,000+ in BoW
+- **Semantic:** Similar words have similar vectors
+
+## 2.3 Measuring Similarity: Cosine Distance
+
+Similarity between vectors is measured using **cosine similarity**:
+
+```{r cosine-similarity}
+# Simple example with 3D vectors
+democracy_vec <- c(0.8, 0.6, 0.1)
+freedom_vec <- c(0.7, 0.7, 0.0)
+banana_vec <- c(0.1, 0.2, 0.9)
+
+# Cosine similarity function
+cosine_sim <- function(a, b) {
+  sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+}
+
+cat("democracy ↔ freedom:", cosine_sim(democracy_vec, freedom_vec), "\n")
+cat("democracy ↔ banana:", cosine_sim(democracy_vec, banana_vec), "\n")
+```
+
+Higher cosine similarity = more semantically related words.
+
+---
+
+# Part 3: Training Word2Vec Models
+
+## 3.1 Load or Create Political Corpus
+
+```{r load-corpus}
+# Option 1: Use your own corpus
+# my_corpus <- read_csv("data/my_corpus.csv")
+
+# Option 2: Use sample data from Week 1
+source("generate_sample_data.R")
+political_corpus <- generate_sample_corpus(100)  # Larger corpus for embeddings
+
+# Prepare text for Word2Vec (one document per line)
+corpus_text <- political_corpus$text
+
+cat("Corpus size:", length(corpus_text), "documents\n")
+cat("Sample text:\n", corpus_text[1], "\n")
+```
+
+## 3.2 Preprocess Text for Word2Vec
+
+```{r preprocess-w2v}
+# Word2Vec preprocessing
+clean_for_w2v <- function(text) {
+  text %>%
+    str_to_lower() %>%
+    str_replace_all("[[:punct:]]", " ") %>%
+    str_replace_all("\\s+", " ") %>%
+    str_trim()
+}
+
+corpus_clean <- clean_for_w2v(corpus_text)
+
+# Write to temporary file (word2vec package requires file input)
+temp_file <- tempfile(fileext = ".txt")
+writeLines(corpus_clean, temp_file)
+
+cat("Preprocessed corpus ready for training\n")
+```
+
+## 3.3 Train Word2Vec Model
+
+```{r train-word2vec}
+# Train Word2Vec model
+# Parameters:
+# - dim: embedding dimension (50-300 typical)
+# - window: context window size (5-10 typical)
+# - iter: training iterations
+# - min_count: minimum word frequency threshold
+
+w2v_model <- word2vec(
+  x = temp_file,
+  type = "skip-gram",      # skip-gram or cbow
+  dim = 100,               # embedding dimension
+  window = 5,              # context window
+  iter = 20,               # training iterations
+  min_count = 2,           # minimum word frequency
+  negative = 5,            # negative sampling
+  threads = 4
+)
+
+cat("Model trained!\n")
+cat("Vocabulary size:", length(w2v_model), "words\n")
+```
+
+**Parameters Explained:**
+
+- **skip-gram vs. CBOW:**
+  - Skip-gram: Predicts context words from center word (better for rare words)
+  - CBOW: Predicts center word from context (faster, better for frequent words)
+  
+- **dim:** Higher dimensions capture more nuance but require more data
+- **window:** Larger windows capture broader topic similarity; smaller windows capture functional similarity
+- **min_count:** Remove rare words (reduces noise and vocabulary size)
+
+## 3.4 Explore Trained Embeddings
+
+```{r explore-embeddings}
+# Get embedding matrix
+embeddings <- as.matrix(w2v_model)
+
+cat("Embedding dimensions:", dim(embeddings), "\n")
+cat("Sample words in vocabulary:\n")
+print(head(rownames(embeddings), 20))
+```
+
+---
+
+# Part 4: Semantic Similarity with Embeddings
+
+## 4.1 Finding Similar Words
+
+```{r find-similar}
+# Find words most similar to "democracy"
+predict(w2v_model, c("democracy"), type = "nearest", top_n = 10)
+
+# Find words similar to "economy"
+predict(w2v_model, c("economy"), type = "nearest", top_n = 10)
+
+# Find words similar to "security"
+predict(w2v_model, c("security"), type = "nearest", top_n = 10)
+```
+
+**Interpretation:** The model learned that these words appear in similar contexts!
+
+## 4.2 Comparing Multiple Concepts
+
+```{r compare-concepts}
+# Define political concepts
+concepts <- c("democracy", "security", "economy", "healthcare")
+
+# Get similarities for each
+similar_to_concepts <- lapply(concepts, function(word) {
+  if (word %in% rownames(embeddings)) {
+    sims <- predict(w2v_model, c(word), type = "nearest", top_n = 5)
+    tibble(
+      concept = word,
+      similar_word = sims$term2,
+      similarity = sims$similarity
+    )
+  } else {
+    tibble(concept = word, similar_word = NA, similarity = NA)
+  }
+}) %>% bind_rows()
+
+# Visualize
+similar_to_concepts %>%
+  filter(!is.na(similar_word)) %>%
+  ggplot(aes(x = reorder(similar_word, similarity), y = similarity, fill = concept)) +
+  geom_col() +
+  coord_flip() +
+  facet_wrap(~concept, scales = "free_y") +
+  labs(
+    title = "Most Similar Words to Key Political Concepts",
+    subtitle = "Based on Word2Vec embeddings trained on political corpus",
+    x = NULL,
+    y = "Cosine Similarity"
+  ) +
+  theme(legend.position = "none")
+```
+
+## 4.3 Computing Word Pair Similarity
+
+```{r word-pair-similarity}
+# Define word pairs to compare
+word_pairs <- tribble(
+  ~word1, ~word2, ~expected,
+  "democracy", "freedom", "High",
+  "democracy", "autocracy", "Medium",
+  "democracy", "banana", "Low",
+  "government", "regime", "High",
+  "economy", "healthcare", "Medium",
+  "election", "voting", "High"
+)
+
+# Compute similarities
+word_pairs <- word_pairs %>%
+  rowwise() %>%
+  mutate(
+    similarity = {
+      if (word1 %in% rownames(embeddings) && word2 %in% rownames(embeddings)) {
+        vec1 <- embeddings[word1, ]
+        vec2 <- embeddings[word2, ]
+        sum(vec1 * vec2) / (sqrt(sum(vec1^2)) * sqrt(sum(vec2^2)))
+      } else {
+        NA
+      }
+    }
+  ) %>%
+  ungroup()
+
+print(word_pairs)
+
+# Visualize
+word_pairs %>%
+  filter(!is.na(similarity)) %>%
+  mutate(pair = paste(word1, "↔", word2)) %>%
+  ggplot(aes(x = reorder(pair, similarity), y = similarity, fill = expected)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_manual(values = c("High" = "#27ae60", "Medium" = "#f39c12", "Low" = "#e74c3c")) +
+  labs(
+    title = "Semantic Similarity Between Word Pairs",
+    subtitle = "Word2Vec embeddings capture expected relationships",
+    x = NULL,
+    y = "Cosine Similarity",
+    fill = "Expected\nSimilarity"
+  )
+```
+
+---
+
+# Part 5: Word Analogies
+
+## 5.1 The Analogy Task
+
+One of the most famous properties of embeddings: **vector arithmetic captures semantic relationships**.
+
+**Classic example:** "king" - "man" + "woman" ≈ "queen"
+
+**Political example:** "democracy" - "elections" + "control" ≈ "autocracy"
+
+## 5.2 Performing Analogies
+
+```{r word-analogies}
+# Helper function for analogies
+word_analogy <- function(model, positive, negative, top_n = 5) {
+  # Check if all words are in vocabulary
+  all_words <- c(positive, negative)
+  missing <- all_words[!all_words %in% rownames(embeddings)]
+  
+  if (length(missing) > 0) {
+    cat("Missing words:", paste(missing, collapse = ", "), "\n")
+    return(NULL)
+  }
+  
+  # Compute: positive[1] - negative[1] + positive[2]
+  result_vec <- embeddings[positive[1], ] - embeddings[negative[1], ] + embeddings[positive[2], ]
+  
+  # Find nearest words
+  similarities <- embeddings %*% result_vec / 
+    (sqrt(rowSums(embeddings^2)) * sqrt(sum(result_vec^2)))
+  
+  # Remove input words and get top results
+  similarities <- similarities[!rownames(embeddings) %in% all_words]
+  top_indices <- order(similarities, decreasing = TRUE)[1:top_n]
+  
+  tibble(
+    word = rownames(embeddings)[as.numeric(names(similarities)[top_indices])],
+    similarity = as.numeric(similarities[top_indices])
+  )
+}
+
+# Try political analogies
+cat("democracy - freedom + control = ?\n")
+word_analogy(w2v_model, c("democracy", "control"), c("freedom"), top_n = 5)
+
+cat("\ngovernment - elections + military = ?\n")
+word_analogy(w2v_model, c("government", "military"), c("elections"), top_n = 5)
+
+cat("\neconomic - growth + decline = ?\n")
+word_analogy(w2v_model, c("economic", "decline"), c("growth"), top_n = 5)
+```
+
+## 5.3 Exploring Political Analogies
+
+```{r political-analogies}
+# Define analogies to test
+analogies <- tribble(
+  ~word1, ~word2, ~word3, ~relation,
+  "democracy", "freedom", "autocracy", "democracy:freedom :: autocracy:?",
+  "president", "executive", "congress", "president:executive :: congress:?",
+  "liberal", "progressive", "conservative", "liberal:progressive :: conservative:?",
+  "economy", "fiscal", "healthcare", "economy:fiscal :: healthcare:?"
+)
+
+# Compute analogies
+analogy_results <- analogies %>%
+  rowwise() %>%
+  mutate(
+    result = {
+      res <- word_analogy(w2v_model, c(word1, word3), c(word2), top_n = 3)
+      if (!is.null(res)) {
+        paste(res$word[1:min(3, nrow(res))], collapse = ", ")
+      } else {
+        "N/A"
+      }
+    }
+  ) %>%
+  ungroup()
+
+print(analogy_results)
+```
+
+**Discussion:** Do these analogies make substantive sense? This is where Rodriguez & Spirling's validation insights matter!
+
+---
+
+# Part 6: Visualizing Embedding Spaces
+
+## 6.1 Dimensionality Reduction: PCA
+
+We can't visualize 100-dimensional space, so we reduce to 2D using PCA or t-SNE.
+
+```{r pca-visualization}
+# Select interesting political words
+political_words <- c(
+  "democracy", "autocracy", "freedom", "control",
+  "liberal", "conservative", "progressive", "moderate",
+  "economy", "healthcare", "security", "education",
+  "government", "regime", "state", "nation",
+  "election", "voting", "campaign", "policy"
+)
+
+# Filter to words in vocabulary
+political_words <- political_words[political_words %in% rownames(embeddings)]
+
+# Get embeddings for these words
+word_embeddings <- embeddings[political_words, ]
+
+# Perform PCA
+pca_result <- prcomp(word_embeddings, center = TRUE, scale. = TRUE)
+
+# Create visualization data
+pca_data <- tibble(
+  word = political_words,
+  PC1 = pca_result$x[, 1],
+  PC2 = pca_result$x[, 2]
+)
+
+# Plot
+ggplot(pca_data, aes(x = PC1, y = PC2, label = word)) +
+  geom_point(size = 3, alpha = 0.7, color = "steelblue") +
+  geom_text_repel(size = 3.5, max.overlaps = 20) +
+  labs(
+    title = "Political Word Embeddings in 2D Space (PCA)",
+    subtitle = "Similar words cluster together",
+    x = paste0("PC1 (", round(summary(pca_result)$importance[2, 1] * 100, 1), "% variance)"),
+    y = paste0("PC2 (", round(summary(pca_result)$importance[2, 2] * 100, 1), "% variance)")
+  )
+```
+
+## 6.2 t-SNE Visualization
+
+t-SNE preserves local structure better than PCA (but is non-linear and slower).
+
+```{r tsne-visualization}
+library(Rtsne)
+
+# t-SNE requires more data points - let's use top 50 words
+top_words <- head(rownames(embeddings), 50)
+top_embeddings <- embeddings[top_words, ]
+
+# Run t-SNE
+tsne_result <- Rtsne(
+  top_embeddings,
+  dims = 2,
+  perplexity = 10,  # Lower for small datasets
+  max_iter = 1000,
+  check_duplicates = FALSE
+)
+
+# Create visualization data
+tsne_data <- tibble(
+  word = top_words,
+  tsne1 = tsne_result$Y[, 1],
+  tsne2 = tsne_result$Y[, 2]
+)
+
+# Plot
+ggplot(tsne_data, aes(x = tsne1, y = tsne2, label = word)) +
+  geom_point(size = 3, alpha = 0.7, color = "darkred") +
+  geom_text_repel(size = 3, max.overlaps = 20) +
+  labs(
+    title = "Word Embeddings in 2D Space (t-SNE)",
+    subtitle = "Non-linear projection preserves local neighborhoods",
+    x = "t-SNE Dimension 1",
+    y = "t-SNE Dimension 2"
+  )
+```
+
+**Interpretation:** Words that cluster together are used in similar contexts. Do the clusters make substantive sense for political science?
+
+---
+
+# Part 7: Using Pre-trained Embeddings (GloVe)
+
+## 7.1 Why Pre-trained Embeddings?
+
+**Advantages:**
+- Trained on massive corpora (billions of words)
+- Capture general semantic knowledge
+- No need for large domain corpus
+- Ready to use immediately
+
+**Disadvantages:**
+- May not capture domain-specific meanings
+- Static across all contexts
+- Can reflect biases in training data
+
+## 7.2 Loading Pre-trained GloVe Embeddings
+
+```{r glove-loading, eval=FALSE}
+# GloVe embeddings must be downloaded separately
+# Download from: https://nlp.stanford.edu/projects/glove/
+# We'll use glove.6B.100d.txt (100-dimensional, trained on 6B tokens)
+
+# Load GloVe embeddings (if you have them)
+glove_file <- "path/to/glove.6B.100d.txt"
+
+if (file.exists(glove_file)) {
+  glove <- read.table(
+    glove_file,
+    quote = "",
+    comment.char = "",
+    stringsAsFactors = FALSE
+  )
+  
+  # First column is word, rest are embedding values
+  glove_words <- glove[, 1]
+  glove_embeddings <- as.matrix(glove[, -1])
+  rownames(glove_embeddings) <- glove_words
+  
+  cat("Loaded GloVe embeddings:", nrow(glove_embeddings), "words\n")
+}
+```
+
+## 7.3 Comparing Custom vs. Pre-trained
+
+```{r compare-embeddings, eval=FALSE}
+# Compare word similarities in both embedding spaces
+test_word <- "democracy"
+
+# Custom Word2Vec
+cat("Custom Word2Vec - similar to", test_word, ":\n")
+predict(w2v_model, c(test_word), type = "nearest", top_n = 5)
+
+# Pre-trained GloVe (if loaded)
+if (exists("glove_embeddings")) {
+  if (test_word %in% rownames(glove_embeddings)) {
+    test_vec <- glove_embeddings[test_word, ]
+    similarities <- glove_embeddings %*% test_vec / 
+      (sqrt(rowSums(glove_embeddings^2)) * sqrt(sum(test_vec^2)))
+    top_indices <- order(similarities, decreasing = TRUE)[2:6]  # Skip self
+    
+    cat("\nPre-trained GloVe - similar to", test_word, ":\n")
+    print(tibble(
+      word = rownames(glove_embeddings)[top_indices],
+      similarity = as.numeric(similarities[top_indices])
+    ))
+  }
+}
+```
+
+**Discussion:** Which captures political science concepts better? This depends on your corpus and research question!
+
+---
+
+# Part 8: Document Similarity with Embeddings
+
+## 8.1 From Word Embeddings to Document Embeddings
+
+**Simple approach:** Average word vectors in each document.
+
+```{r doc-embeddings-simple}
+# Function to compute document embedding (average of word vectors)
+get_doc_embedding <- function(text, word_embeddings, remove_stopwords = TRUE) {
+  # Tokenize
+  words <- text %>%
+    str_to_lower() %>%
+    str_split("\\s+") %>%
+    unlist()
+  
+  # Optionally remove stop words
+  if (remove_stopwords) {
+    words <- words[!words %in% stop_words$word]
+  }
+  
+  # Get vectors for words in vocabulary
+  words_in_vocab <- words[words %in% rownames(word_embeddings)]
+  
+  if (length(words_in_vocab) == 0) {
+    return(rep(0, ncol(word_embeddings)))
+  }
+  
+  # Average word vectors
+  word_vecs <- word_embeddings[words_in_vocab, , drop = FALSE]
+  colMeans(word_vecs)
+}
+
+# Compute document embeddings for our corpus
+doc_embeddings <- lapply(corpus_clean, function(text) {
+  get_doc_embedding(text, embeddings, remove_stopwords = TRUE)
+})
+
+doc_embeddings_matrix <- do.call(rbind, doc_embeddings)
+rownames(doc_embeddings_matrix) <- paste0("doc_", 1:nrow(doc_embeddings_matrix))
+
+cat("Document embeddings:", dim(doc_embeddings_matrix), "\n")
+```
+
+## 8.2 Computing Document Similarity
+
+```{r doc-similarity-embeddings}
+# Cosine similarity between documents
+library(proxy)
+
+doc_sim_embeddings <- as.matrix(simil(doc_embeddings_matrix, method = "cosine"))
+
+# Compare first 10 documents
+doc_sim_subset <- doc_sim_embeddings[1:10, 1:10]
+
+# Visualize as heatmap
+library(reshape2)
+melted_sim <- melt(doc_sim_subset)
+
+ggplot(melted_sim, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(
+    low = "white",
+    mid = "lightblue",
+    high = "darkblue",
+    midpoint = 0.5,
+    limits = c(0, 1)
+  ) +
+  geom_text(aes(label = round(value, 2)), size = 3) +
+  labs(
+    title = "Document Similarity Matrix (Embedding-Based)",
+    subtitle = "Based on averaged word embeddings",
+    x = "Document",
+    y = "Document",
+    fill = "Cosine\nSimilarity"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## 8.3 Comparing BoW vs. Embedding-Based Similarity
+
+```{r compare-bow-embeddings}
+# Create BoW document-term matrix
+corp <- corpus(corpus_clean[1:10])
+dtm_bow <- corp %>%
+  tokens() %>%
+  tokens_remove(stop_words$word) %>%
+  dfm()
+
+# BoW similarity
+doc_sim_bow <- as.matrix(textstat_simil(dtm_bow, method = "cosine"))
+
+# Compare similarities
+comparison <- tibble(
+  doc_pair = "doc_1 vs doc_2",
+  bow_similarity = doc_sim_bow[1, 2],
+  embedding_similarity = doc_sim_embeddings[1, 2],
+  difference = embedding_similarity - bow_similarity
+)
+
+# Add more comparisons
+for (i in 1:5) {
+  for (j in (i+1):6) {
+    if (j <= 10) {
+      comparison <- comparison %>%
+        add_row(
+          doc_pair = paste0("doc_", i, " vs doc_", j),
+          bow_similarity = doc_sim_bow[i, j],
+          embedding_similarity = doc_sim_embeddings[i, j],
+          difference = embedding_similarity - bow_similarity
+        )
+    }
+  }
+}
+
+print(comparison)
+
+# Visualize comparison
+comparison %>%
+  pivot_longer(cols = c(bow_similarity, embedding_similarity), 
+               names_to = "method", 
+               values_to = "similarity") %>%
+  ggplot(aes(x = doc_pair, y = similarity, fill = method)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  scale_fill_manual(
+    values = c("bow_similarity" = "#e74c3c", "embedding_similarity" = "#3498db"),
+    labels = c("Bag of Words", "Word Embeddings")
+  ) +
+  labs(
+    title = "Document Similarity: BoW vs. Embeddings",
+    subtitle = "Embeddings capture semantic similarity beyond exact word matches",
+    x = NULL,
+    y = "Cosine Similarity",
+    fill = "Method"
+  )
+```
+
+**Key Insight:** Embeddings can identify documents as similar even when they don't share exact words, because they capture semantic meaning!
+
+---
+
+# Part 9: Connecting to Rodriguez & Spirling (2022)
+
+## Key Insights from "Word Embeddings: What Works, What Doesn't"
+
+Rodriguez & Spirling provide critical guidance for using embeddings in political science research.
+
+### 9.1 When Embeddings Help
+
+```{r rs-when-help, eval=FALSE}
+# Embeddings are particularly useful when:
+
+# 1. You need to find semantically similar documents
+similar_docs <- which(doc_sim_embeddings[1, ] > 0.8)
+cat("Documents similar to doc_1:", similar_docs, "\n")
+
+# 2. You want to capture synonyms and related concepts
+predict(w2v_model, c("economy"), type = "nearest", top_n = 10)
+
+# 3. You're working with varied vocabulary
+# (embeddings handle "nation", "country", "state" as similar)
+
+# 4. You need to measure concept relationships
+# (e.g., how "democracy" relates to "freedom" vs. "control")
+```
+
+### 9.2 When Embeddings Don't Help (or Hurt)
+
+**Problem 1: Small Corpora**
+
+```{r rs-small-corpus}
+# Embeddings need sufficient data to learn relationships
+cat("Our corpus size:", length(corpus_clean), "documents\n")
+cat("Vocabulary size:", length(w2v_model), "words\n")
+cat("\n")
+cat("Rodriguez & Spirling recommend:\n")
+cat("- Minimum 500 documents for domain-specific embeddings\n")
+cat("- Preferably 5,000+ documents for reliable relationships\n")
+cat("- Use pre-trained embeddings if your corpus is smaller\n")
+```
+
+**Problem 2: Domain-Specific Meanings**
+
+```{r rs-domain-meanings, eval=FALSE}
+# Example: "liberal" means different things in different contexts
+# - US politics: left-wing
+# - European politics: free-market
+# - Historical texts: freedom-oriented
+
+# Pre-trained embeddings may not capture your specific domain usage
+# Solution: Train on domain-specific corpus OR fine-tune pre-trained embeddings
+```
+
+**Problem 3: Bias and Stereotypes**
+
+```{r rs-bias, eval=FALSE}
+# Embeddings can capture biases in training data
+# Example associations that may appear:
+# - "he" : "doctor" :: "she" : "nurse"
+# - "democrat" : "urban" :: "republican" : "rural"
+
+# Rodriguez & Spirling emphasize: VALIDATE your embeddings!
+# Don't assume they capture objective truth
+```
+
+### 9.3 Validation Strategies (R&S Framework)
+
+```{r rs-validation}
+# Rodriguez & Spirling recommend multiple validation approaches:
+
+# 1. INTRINSIC: Check word similarities
+validation_pairs <- tribble(
+  ~word1, ~word2, ~expected_similarity,
+  "democracy", "freedom", "high",
+  "democracy", "banana", "low",
+  "liberal", "conservative", "medium",  # Related but opposed
+  "economy", "fiscal", "high"
+)
+
+cat("1. Intrinsic Validation: Word Pair Similarities\n")
+cat("   Check if similar words have high cosine similarity\n\n")
+
+# 2. EXTRINSIC: Use in downstream task
+cat("2. Extrinsic Validation: Downstream Task Performance\n")
+cat("   Does using embeddings improve document classification?\n")
+cat("   Does it improve topic coherence?\n\n")
+
+# 3. QUALITATIVE: Expert review
+cat("3. Qualitative Validation: Expert Review\n")
+cat("   Do the nearest neighbors make substantive sense?\n")
+cat("   Do analogies reflect real political relationships?\n\n")
+
+# 4. COMPARATIVE: Compare to alternatives
+cat("4. Comparative Validation: vs. Alternatives\n")
+cat("   How do embeddings compare to BoW?\n")
+cat("   How do custom embeddings compare to pre-trained?\n")
+```
+
+### 9.4 Practical Recommendations
+
+```{r rs-recommendations, eval=FALSE}
+# Rodriguez & Spirling's recommendations for political scientists:
+
+# 1. START SIMPLE
+#    - Try BoW first as baseline
+#    - Add embeddings if they improve performance
+#    - Don't assume complex = better
+
+# 2. VALIDATE THOROUGHLY
+#    - Check word similarities make sense
+#    - Read documents that embeddings mark as similar
+#    - Test on held-out data
+
+# 3. REPORT TRANSPARENTLY
+#    - State embedding parameters (dim, window, corpus size)
+#    - Show validation results
+#    - Discuss limitations
+
+# 4. CONSIDER ALTERNATIVES
+#    - Pre-trained vs. custom embeddings
+#    - Different embedding algorithms (Word2Vec, GloVe, fastText)
+#    - Contextual embeddings (Week 3!)
+
+# 5. BE SKEPTICAL
+#    - Embeddings reflect training data, not objective truth
+#    - Can reinforce stereotypes and biases
+#    - Validate against substantive knowledge
+```
+
+---
+
+# Part 10: Advanced Topics (Optional)
+
+## 10.1 Weighted Document Embeddings (TF-IDF Weighting)
+
+Instead of simple averaging, weight word vectors by TF-IDF:
+
+```{r tfidf-doc-embeddings, eval=FALSE}
+# Compute TF-IDF weights
+tokens_df <- tibble(text = corpus_clean, doc_id = 1:length(corpus_clean)) %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word")
+
+tfidf_weights <- tokens_df %>%
+  count(doc_id, word) %>%
+  bind_tf_idf(word, doc_id, n)
+
+# Function for TF-IDF weighted document embedding
+get_tfidf_doc_embedding <- function(doc_id, tfidf_df, word_embeddings) {
+  doc_words <- tfidf_df %>%
+    filter(doc_id == !!doc_id) %>%
+    filter(word %in% rownames(word_embeddings))
+  
+  if (nrow(doc_words) == 0) {
+    return(rep(0, ncol(word_embeddings)))
+  }
+  
+  weighted_vecs <- word_embeddings[doc_words$word, ] * doc_words$tf_idf
+  colSums(weighted_vecs) / sum(doc_words$tf_idf)
+}
+
+# This often improves document similarity!
+```
+
+## 10.2 Subword Embeddings (fastText)
+
+FastText handles out-of-vocabulary words by using character n-grams:
+
+```{r fasttext-concept, eval=FALSE}
+# "democracy" → ["dem", "emo", "moc", "ocr", "cra", "rac", "acy"]
+# 
+# Benefits:
+# - Handles rare/unseen words
+# - Captures morphological similarity
+# - Works better for inflected languages
+#
+# Trade-off: Slightly larger models, more computation
+
+# Note: fastText not easily available in R
+# Consider using Python's gensim or fastText library
+# Or use pre-trained fastText embeddings
+```
+
+---
+
+# Part 11: Your Turn - Practical Exercises
+
+## Exercise 1: Train Embeddings on Your Corpus
+
+```{r exercise-1, eval=FALSE}
+# Load your dissertation corpus
+# my_corpus <- read_csv("data/my_corpus.csv")
+
+# Steps:
+# 1. Preprocess text for Word2Vec
+# 2. Train Word2Vec model (experiment with parameters)
+# 3. Examine vocabulary size and sample words
+# 4. Check nearest neighbors for key concepts
+
+# Your code here:
+
+```
+
+## Exercise 2: Validate Embedding Quality
+
+```{r exercise-2, eval=FALSE}
+# Create validation test:
+# 1. Define 10+ word pairs with expected similarities
+# 2. Compute actual similarities
+# 3. Check if results match expectations
+# 4. Examine cases where they don't - why?
+
+# Your code here:
+
+```
+
+## Exercise 3: Political Analogies
+
+```{r exercise-3, eval=FALSE}
+# Explore analogies in your domain:
+# 1. Define 5+ political analogies to test
+# 2. Compute results using word arithmetic
+# 3. Evaluate if results make substantive sense
+# 4. Document interesting findings and failures
+
+# Your code here:
+
+```
+
+## Exercise 4: BoW vs. Embedding Comparison
+
+```{r exercise-4, eval=FALSE}
+# Compare document similarity methods:
+# 1. Select 10 documents from your corpus
+# 2. Compute BoW-based similarity matrix
+# 3. Compute embedding-based similarity matrix
+# 4. Analyze differences - when does each method work better?
+
+# Your code here:
+
+```
+
+## Exercise 5: Visualization
+
+```{r exercise-5, eval=FALSE}
+# Create embedding space visualization:
+# 1. Select 30-50 important words from your research
+# 2. Extract their embeddings
+# 3. Apply PCA or t-SNE
+# 4. Create visualization with labels
+# 5. Interpret clusters - do they make sense?
+
+# Your code here:
+
+```
+
+---
+
+# Week 2 Deliverables Checklist
+
+For your assignment, complete the following:
+
+- [ ] **Train Word2Vec Model**
+  - Minimum 500 documents (preferably more)
+  - Document embedding parameters (dim, window, iter)
+  - Report vocabulary size
+
+- [ ] **Identify Semantic Relationships**
+  - Find 10+ interesting word similarity pairs
+  - Test 5+ political analogies
+  - Interpret results substantively
+
+- [ ] **Compare Methods**
+  - Compute document similarity with BoW
+  - Compute document similarity with embeddings
+  - Analyze when each method performs better
+  - Create comparison visualization
+
+- [ ] **Validation Strategy**
+  - Define intrinsic validation tests
+  - Test word pair similarities
+  - Qualitative review of nearest neighbors
+  - Document limitations and edge cases
+
+- [ ] **Visualization**
+  - Create 2D projection (PCA or t-SNE)
+  - Label key political concepts
+  - Interpret clusters
+
+- [ ] **Written Report (2 pages)**
+  - How do embeddings improve over BoW for your research?
+  - What did you learn about political language?
+  - How do Rodriguez & Spirling's insights apply?
+  - What are limitations of your embeddings?
+  - Would pre-trained or custom embeddings work better?
+
+---
+
+# Summary
+
+This week, we learned:
+
+✅ **Limitations of bag-of-words** - sparse, high-dimensional, no semantics  
+✅ **Word embeddings** - dense, low-dimensional vectors capturing meaning  
+✅ **Training Word2Vec** - skip-gram, CBOW, parameter tuning  
+✅ **Semantic similarity** - finding related words and concepts  
+✅ **Word analogies** - vector arithmetic captures relationships  
+✅ **Visualization** - PCA and t-SNE for exploring embedding spaces  
+✅ **Document embeddings** - averaging word vectors for document similarity  
+✅ **Validation** - intrinsic, extrinsic, qualitative approaches  
+✅ **Rodriguez & Spirling** - when embeddings help, when they don't  
+
+**Next Week Preview:** We'll move to contextual embeddings where word meaning depends on context. "Bank" in "river bank" vs. "bank account" will finally get different representations!
+
+**Remember Rodriguez & Spirling's key message:** Embeddings are powerful tools, but they're not magic. Validate thoroughly, report limitations, and always ground findings in substantive knowledge.
+
+---

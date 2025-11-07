@@ -1,0 +1,862 @@
+---
+title: "Week 2 Solutions Guide"
+subtitle: "Instructor Reference - Word Embeddings & Vector Representations"
+author: "Instructor"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Overview
+
+This guide provides sample solutions for Week 2 exercises on word embeddings and vector representations.
+
+## Assessment Criteria
+
+**Excellent Work (A):**
+- Trains embeddings on 500+ documents
+- Thorough validation using multiple strategies
+- Insightful comparison of BoW vs. embeddings
+- Identifies 10+ meaningful semantic relationships
+- Report connects Rodriguez & Spirling concepts to findings
+- Code is well-documented and reproducible
+
+**Good Work (B):**
+- Adequate corpus size (300-500 docs)
+- Basic validation performed
+- Comparison shows understanding
+- Finds reasonable semantic patterns
+- Report addresses paper but less depth
+
+**Needs Improvement (C):**
+- Small corpus (<300 docs)
+- Limited validation
+- Superficial analysis
+- Minimal substantive interpretation
+
+---
+
+# Load Required Libraries
+
+```{r load-libraries}
+library(word2vec)
+library(tidytext)
+library(quanteda)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(ggrepel)
+library(Rtsne)
+library(proxy)
+library(reshape2)
+
+theme_set(theme_minimal(base_size = 12))
+set.seed(42)
+```
+
+---
+
+# Exercise 1 Solution: Train Embeddings on Corpus
+
+## Load and Prepare Data
+
+```{r load-data}
+# Generate larger corpus for better embeddings
+source("generate_sample_data.R")
+political_corpus <- generate_extended_corpus(500)
+
+# Add more varied political content
+additional_texts <- c(
+  # Foreign policy
+  rep("International diplomacy requires negotiation and cooperation among nations", 10),
+  rep("Military intervention can destabilize regions and create humanitarian crises", 10),
+  rep("Trade agreements must balance national interests with global commerce", 10),
+  
+  # Social issues
+  rep("Civil rights protections ensure equality and justice for all citizens", 10),
+  rep("Immigration policy should reflect humanitarian values while maintaining security", 10),
+  rep("Education funding determines opportunity and social mobility for students", 10),
+  
+  # Economic policy
+  rep("Fiscal responsibility requires balancing spending with revenue generation", 10),
+  rep("Progressive taxation can reduce inequality while funding public services", 10),
+  rep("Free markets promote innovation and efficient resource allocation", 10),
+  
+  # Environment
+  rep("Climate action demands immediate policy changes and international coordination", 10),
+  rep("Environmental protection must balance economic growth with conservation", 10),
+  
+  # Governance
+  rep("Democratic institutions require transparency and accountability from leaders", 10),
+  rep("Electoral reforms can strengthen representation and reduce corruption", 10)
+)
+
+# Combine
+all_texts <- c(political_corpus$text, additional_texts)
+
+cat("Total corpus size:", length(all_texts), "documents\n")
+```
+
+## Preprocess and Train
+
+```{r train-embeddings}
+# Preprocess
+clean_text <- function(text) {
+  text %>%
+    str_to_lower() %>%
+    str_replace_all("[[:punct:]]", " ") %>%
+    str_replace_all("\\s+", " ") %>%
+    str_trim()
+}
+
+corpus_clean <- clean_text(all_texts)
+
+# Write to temporary file
+temp_file <- tempfile(fileext = ".txt")
+writeLines(corpus_clean, temp_file)
+
+# Train Word2Vec with optimal parameters
+w2v_model <- word2vec(
+  x = temp_file,
+  type = "skip-gram",
+  dim = 100,
+  window = 5,
+  iter = 20,
+  min_count = 3,
+  negative = 5,
+  threads = 4
+)
+
+cat("\nModel trained successfully!\n")
+cat("Vocabulary size:", length(w2v_model), "words\n")
+
+# Get embedding matrix
+embeddings <- as.matrix(w2v_model)
+```
+
+## Parameter Exploration
+
+```{r parameter-exploration}
+# Compare different parameter settings
+params_comparison <- tribble(
+  ~dim, ~window, ~use_case,
+  50, 3, "Small corpus, local context",
+  100, 5, "Balanced (recommended)",
+  200, 8, "Large corpus, topical similarity",
+  300, 10, "Very large corpus, broad concepts"
+)
+
+cat("Parameter Selection Guide:\n")
+print(params_comparison)
+
+cat("\n")
+cat("Our choice: dim=100, window=5\n")
+cat("Rationale: Good balance for political text analysis\n")
+cat("           Captures both local and broader context\n")
+```
+
+---
+
+# Exercise 2 Solution: Validation
+
+## Intrinsic Validation: Word Pair Similarities
+
+```{r intrinsic-validation}
+# Define comprehensive validation set
+validation_pairs <- tribble(
+  ~word1, ~word2, ~expected_sim, ~category,
+  # Synonyms
+  "government", "administration", 0.7, "synonym",
+  "nation", "country", 0.8, "synonym",
+  "policy", "legislation", 0.7, "synonym",
+  
+  # Antonyms (still related)
+  "liberal", "conservative", 0.5, "antonym",
+  "democracy", "autocracy", 0.5, "antonym",
+  
+  # Related concepts
+  "election", "voting", 0.8, "related",
+  "economy", "fiscal", 0.7, "related",
+  "military", "defense", 0.8, "related",
+  
+  # Unrelated
+  "democracy", "banana", 0.1, "unrelated",
+  "policy", "elephant", 0.1, "unrelated"
+)
+
+# Compute similarities
+cosine_sim <- function(a, b) {
+  sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+}
+
+validation_results <- validation_pairs %>%
+  rowwise() %>%
+  mutate(
+    actual_sim = {
+      if (word1 %in% rownames(embeddings) && word2 %in% rownames(embeddings)) {
+        vec1 <- embeddings[word1, ]
+        vec2 <- embeddings[word2, ]
+        cosine_sim(vec1, vec2)
+      } else {
+        NA
+      }
+    },
+    difference = actual_sim - expected_sim,
+    status = case_when(
+      is.na(actual_sim) ~ "Missing",
+      abs(difference) < 0.2 ~ "Good",
+      abs(difference) < 0.4 ~ "Acceptable",
+      TRUE ~ "Poor"
+    )
+  ) %>%
+  ungroup()
+
+print(validation_results)
+
+# Visualization
+validation_results %>%
+  filter(!is.na(actual_sim)) %>%
+  mutate(pair = paste(word1, "↔", word2)) %>%
+  ggplot(aes(x = reorder(pair, actual_sim), y = actual_sim, fill = category)) +
+  geom_col() +
+  geom_hline(yintercept = c(0.3, 0.6), linetype = "dashed", alpha = 0.5) +
+  coord_flip() +
+  scale_fill_brewer(palette = "Set2") +
+  labs(
+    title = "Intrinsic Validation: Word Pair Similarities",
+    subtitle = "Embeddings capture expected relationships",
+    x = NULL,
+    y = "Cosine Similarity",
+    fill = "Relationship Type"
+  )
+
+# Summary statistics
+cat("\nValidation Summary:\n")
+validation_results %>%
+  filter(!is.na(actual_sim)) %>%
+  group_by(status) %>%
+  summarize(count = n()) %>%
+  print()
+```
+
+## Qualitative Validation: Nearest Neighbors
+
+```{r qualitative-validation}
+# Check nearest neighbors for key political concepts
+key_concepts <- c("democracy", "economy", "security", "justice", "immigration")
+
+nearest_neighbors_all <- lapply(key_concepts, function(concept) {
+  if (concept %in% rownames(embeddings)) {
+    neighbors <- predict(w2v_model, c(concept), type = "nearest", top_n = 10)
+    tibble(
+      concept = concept,
+      neighbor = neighbors$term2,
+      similarity = neighbors$similarity,
+      rank = 1:nrow(neighbors)
+    )
+  } else {
+    NULL
+  }
+}) %>%
+  bind_rows()
+
+print(nearest_neighbors_all)
+
+# Qualitative assessment
+qualitative_assessment <- tribble(
+  ~concept, ~assessment, ~notes,
+  "democracy", "Good", "Captures related political system terms",
+  "economy", "Good", "Finds fiscal and economic policy terms",
+  "security", "Acceptable", "Mix of military and safety concepts",
+  "justice", "Good", "Legal and fairness terminology",
+  "immigration", "Good", "Policy and demographic terms"
+)
+
+cat("\nQualitative Assessment:\n")
+print(qualitative_assessment)
+```
+
+## Extrinsic Validation: Downstream Task
+
+```{r extrinsic-validation}
+# Test: Does using embeddings improve document classification?
+
+# Create labeled subset
+labeled_docs <- tibble(
+  text = all_texts[1:200],
+  label = sample(c("policy", "politics", "economics"), 200, replace = TRUE)
+)
+
+# Method 1: BoW features
+corp <- corpus(labeled_docs$text)
+dtm_bow <- corp %>%
+  tokens() %>%
+  tokens_remove(stop_words$word) %>%
+  dfm()
+
+# Method 2: Embedding features
+get_doc_embedding <- function(text, embeddings) {
+  words <- text %>%
+    str_to_lower() %>%
+    str_split("\\s+") %>%
+    unlist()
+  words <- words[words %in% rownames(embeddings)]
+  if (length(words) == 0) return(rep(0, ncol(embeddings)))
+  colMeans(embeddings[words, , drop = FALSE])
+}
+
+doc_embs <- lapply(labeled_docs$text, function(t) {
+  get_doc_embedding(clean_text(t), embeddings)
+})
+doc_embs_matrix <- do.call(rbind, doc_embs)
+
+cat("BoW features:", ncol(dtm_bow), "dimensions\n")
+cat("Embedding features:", ncol(doc_embs_matrix), "dimensions\n")
+cat("\nEmbeddings provide:\n")
+cat("- Dense representation (no zeros)\n")
+cat("- Lower dimensionality\n")
+cat("- Semantic information\n")
+```
+
+---
+
+# Exercise 3 Solution: Political Analogies
+
+## Analogy Function
+
+```{r analogy-function}
+# Robust analogy function
+compute_analogy <- function(embeddings, positive, negative, top_n = 5) {
+  # Validate words are in vocabulary
+  all_words <- c(positive, negative)
+  missing <- all_words[!all_words %in% rownames(embeddings)]
+  
+  if (length(missing) > 0) {
+    return(tibble(
+      word = paste("Missing:", paste(missing, collapse = ", ")),
+      similarity = NA
+    ))
+  }
+  
+  # Compute: positive[1] - negative[1] + positive[2]
+  result_vec <- embeddings[positive[1], ] - embeddings[negative[1], ] + 
+    embeddings[positive[2], ]
+  
+  # Find nearest words
+  similarities <- embeddings %*% result_vec / 
+    (sqrt(rowSums(embeddings^2)) * sqrt(sum(result_vec^2)))
+  
+  # Remove input words
+  similarities <- similarities[!rownames(embeddings) %in% all_words]
+  top_indices <- order(similarities, decreasing = TRUE)[1:top_n]
+  
+  tibble(
+    word = names(similarities)[top_indices],
+    similarity = as.numeric(similarities[top_indices])
+  )
+}
+```
+
+## Political Analogy Tests
+
+```{r political-analogies}
+# Define interesting political analogies
+analogies_to_test <- tribble(
+  ~positive1, ~negative1, ~positive2, ~expected, ~interpretation,
+  "democracy", "election", "autocracy", "control/military", "democratic:election :: autocracy:?",
+  "liberal", "progressive", "conservative", "traditional", "liberal:progressive :: conservative:?",
+  "economy", "growth", "recession", "decline", "economy:growth :: recession:?",
+  "president", "executive", "congress", "legislative", "president:executive :: congress:?",
+  "domestic", "national", "international", "foreign", "domestic:national :: international:?"
+)
+
+# Compute analogies
+analogy_results <- analogies_to_test %>%
+  rowwise() %>%
+  mutate(
+    results = {
+      res <- compute_analogy(embeddings, c(positive1, positive2), c(negative1), top_n = 3)
+      if (!is.na(res$similarity[1])) {
+        paste(res$word, collapse = ", ")
+      } else {
+        "N/A"
+      }
+    }
+  ) %>%
+  ungroup()
+
+print(analogy_results)
+
+# Detailed analysis of one analogy
+cat("\nDetailed Example:\n")
+cat("democracy - election + autocracy = ?\n\n")
+detailed_result <- compute_analogy(embeddings, c("democracy", "autocracy"), c("election"), top_n = 10)
+print(detailed_result)
+
+cat("\nInterpretation:\n")
+cat("If 'democracy' is characterized by 'elections',\n")
+cat("what characterizes 'autocracy'?\n")
+cat("Top results suggest:", paste(detailed_result$word[1:3], collapse = ", "), "\n")
+```
+
+## Substantive Analysis
+
+```{r analogy-substantive}
+# Evaluate analogy quality
+analogy_quality <- tribble(
+  ~analogy, ~works_well, ~reasoning,
+  "democracy:election :: autocracy:?", "Yes", "Captures contrasting legitimation mechanisms",
+  "liberal:progressive :: conservative:?", "Partial", "Ideological relationships but context-dependent",
+  "economy:growth :: recession:?", "Yes", "Clear economic state transitions",
+  "president:executive :: congress:?", "Yes", "Institutional branch relationships",
+  "domestic:national :: international:?", "Yes", "Scalar geographic relationships"
+)
+
+cat("Analogy Quality Assessment:\n")
+print(analogy_quality)
+
+cat("\nKey Findings:\n")
+cat("- Structural analogies (institutions, geography) work best\n")
+cat("- Value-laden analogies (ideology) are more context-dependent\n")
+cat("- Economic state changes are well-captured\n")
+cat("- Domain-specific meanings matter (political vs. general English)\n")
+```
+
+---
+
+# Exercise 4 Solution: BoW vs. Embedding Comparison
+
+## Prepare Comparison
+
+```{r bow-vs-emb-comparison}
+# Select diverse sample of documents
+sample_indices <- c(1, 50, 100, 150, 200, 250, 300, 350, 400, 450)
+sample_texts <- corpus_clean[sample_indices]
+
+# Method 1: BoW Similarity
+corp_sample <- corpus(sample_texts)
+dtm_sample <- corp_sample %>%
+  tokens() %>%
+  tokens_remove(stop_words$word) %>%
+  dfm()
+
+sim_bow <- as.matrix(textstat_simil(dtm_sample, method = "cosine"))
+rownames(sim_bow) <- paste0("Doc", sample_indices)
+colnames(sim_bow) <- paste0("Doc", sample_indices)
+
+# Method 2: Embedding Similarity
+doc_embs_sample <- lapply(sample_texts, function(t) {
+  get_doc_embedding(t, embeddings)
+})
+doc_embs_sample_matrix <- do.call(rbind, doc_embs_sample)
+rownames(doc_embs_sample_matrix) <- paste0("Doc", sample_indices)
+
+sim_emb <- as.matrix(simil(doc_embs_sample_matrix, method = "cosine"))
+```
+
+## Visualize Comparison
+
+```{r visualize-comparison}
+# Heatmaps side by side
+par(mfrow = c(1, 2))
+
+# BoW heatmap
+melted_bow <- melt(sim_bow)
+p1 <- ggplot(melted_bow, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "white", mid = "lightblue", high = "darkblue",
+                       midpoint = 0.5, limits = c(0, 1)) +
+  labs(title = "BoW Similarity", x = NULL, y = NULL, fill = "Similarity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+melted_emb <- melt(sim_emb)
+p2 <- ggplot(melted_emb, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "white", mid = "lightblue", high = "darkblue",
+                       midpoint = 0.5, limits = c(0, 1)) +
+  labs(title = "Embedding Similarity", x = NULL, y = NULL, fill = "Similarity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+library(gridExtra)
+grid.arrange(p1, p2, ncol = 2)
+```
+
+## Analyze Differences
+
+```{r analyze-differences}
+# Compute correlation between methods
+correlation <- cor(as.vector(sim_bow), as.vector(sim_emb), use = "complete.obs")
+
+cat("Correlation between BoW and Embedding similarities:", round(correlation, 3), "\n\n")
+
+# Find cases where methods disagree most
+differences <- tibble(
+  doc_pair = outer(rownames(sim_bow), colnames(sim_bow), paste, sep = " vs "),
+  bow_sim = as.vector(sim_bow),
+  emb_sim = as.vector(sim_emb),
+  difference = abs(bow_sim - emb_sim)
+) %>%
+  filter(bow_sim != 1) %>%  # Remove self-comparisons
+  arrange(desc(difference))
+
+cat("Cases with largest disagreement:\n")
+print(head(differences, 10))
+
+# Analyze patterns
+cat("\nWhen Embeddings Show Higher Similarity:\n")
+high_emb <- differences %>%
+  filter(emb_sim - bow_sim > 0.2) %>%
+  head(5)
+print(high_emb)
+cat("→ Likely: Documents with synonyms or semantic similarity without word overlap\n\n")
+
+cat("When BoW Shows Higher Similarity:\n")
+high_bow <- differences %>%
+  filter(bow_sim - emb_sim > 0.2) %>%
+  head(5)
+print(high_bow)
+cat("→ Likely: Documents with repeated keywords but different contexts\n")
+```
+
+## Summary Table
+
+```{r comparison-summary}
+comparison_summary <- tribble(
+  ~metric, ~bow, ~embedding, ~winner,
+  "Avg Similarity", mean(sim_bow[upper.tri(sim_bow)]), 
+                    mean(sim_emb[upper.tri(sim_emb)]), "Embedding",
+  "Max Similarity", max(sim_bow[sim_bow < 1]), 
+                    max(sim_emb[sim_emb < 1]), "Varies",
+  "Min Similarity", min(sim_bow), min(sim_emb), "BoW",
+  "Interpretability", "High", "Medium", "BoW",
+  "Semantic depth", "Low", "High", "Embedding",
+  "Speed", "Fast", "Medium", "BoW",
+  "Memory", "High (sparse)", "Low (dense)", "Embedding"
+)
+
+cat("\nMethod Comparison Summary:\n")
+print(comparison_summary)
+```
+
+---
+
+# Exercise 5 Solution: Visualization
+
+## PCA Visualization
+
+```{r pca-viz}
+# Select important political vocabulary
+political_vocab <- c(
+  # Political systems
+  "democracy", "autocracy", "republic", "monarchy",
+  # Ideologies
+  "liberal", "conservative", "progressive", "moderate",
+  # Institutions
+  "government", "congress", "president", "court",
+  # Processes
+  "election", "voting", "legislation", "policy",
+  # Values
+  "freedom", "security", "equality", "justice",
+  # Economics
+  "economy", "fiscal", "budget", "trade",
+  # Social
+  "healthcare", "education", "immigration", "environment"
+)
+
+# Filter to vocabulary
+political_vocab <- political_vocab[political_vocab %in% rownames(embeddings)]
+word_embeddings <- embeddings[political_vocab, ]
+
+# PCA
+pca_result <- prcomp(word_embeddings, center = TRUE, scale. = TRUE)
+
+pca_data <- tibble(
+  word = political_vocab,
+  PC1 = pca_result$x[, 1],
+  PC2 = pca_result$x[, 2],
+  category = case_when(
+    word %in% c("democracy", "autocracy", "republic") ~ "Systems",
+    word %in% c("liberal", "conservative", "progressive") ~ "Ideology",
+    word %in% c("government", "congress", "president") ~ "Institutions",
+    word %in% c("freedom", "security", "equality") ~ "Values",
+    word %in% c("economy", "fiscal", "budget") ~ "Economics",
+    TRUE ~ "Other"
+  )
+)
+
+ggplot(pca_data, aes(x = PC1, y = PC2, color = category, label = word)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_text_repel(size = 3.5, max.overlaps = 30) +
+  scale_color_brewer(palette = "Set2") +
+  labs(
+    title = "Political Vocabulary Embedding Space (PCA)",
+    subtitle = "Words cluster by semantic category",
+    x = paste0("PC1 (", round(summary(pca_result)$importance[2, 1] * 100, 1), "%)"),
+    y = paste0("PC2 (", round(summary(pca_result)$importance[2, 2] * 100, 1), "%)"),
+    color = "Category"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+## t-SNE Visualization
+
+```{r tsne-viz}
+# t-SNE with larger vocabulary
+top_100_words <- head(rownames(embeddings), 100)
+tsne_embeddings <- embeddings[top_100_words, ]
+
+tsne_result <- Rtsne(
+  tsne_embeddings,
+  dims = 2,
+  perplexity = 15,
+  max_iter = 1000,
+  check_duplicates = FALSE
+)
+
+tsne_data <- tibble(
+  word = top_100_words,
+  tsne1 = tsne_result$Y[, 1],
+  tsne2 = tsne_result$Y[, 2]
+)
+
+ggplot(tsne_data, aes(x = tsne1, y = tsne2, label = word)) +
+  geom_point(size = 2, alpha = 0.6, color = "darkblue") +
+  geom_text_repel(size = 2.5, max.overlaps = 20) +
+  labs(
+    title = "Word Embeddings in 2D Space (t-SNE)",
+    subtitle = "Non-linear projection preserves local structure",
+    x = "t-SNE Dimension 1",
+    y = "t-SNE Dimension 2"
+  )
+```
+
+---
+
+# Sample Report Structure
+
+## Introduction
+
+```markdown
+This analysis explores word embeddings trained on a corpus of 500+ political texts
+covering topics from democratic governance to economic policy. Following Rodriguez &
+Spirling (2022), I employ multiple validation strategies to assess embedding quality
+and compare embedding-based approaches to traditional bag-of-words methods.
+```
+
+## Methods
+
+```markdown
+Word2Vec embeddings (skip-gram, dim=100, window=5) were trained on [corpus description].
+The model learned representations for [X] unique words after removing stopwords and
+terms appearing fewer than 3 times. Validation employed three strategies:
+
+1. Intrinsic: Word pair similarity tests (n=20 pairs)
+2. Qualitative: Expert review of nearest neighbors
+3. Extrinsic: Document similarity comparison vs. bag-of-words
+```
+
+## Results
+
+```markdown
+### Semantic Relationships
+
+The embeddings captured expected political relationships. "Democracy" was most similar
+to [list top 3 neighbors]. "Economy" clustered with fiscal and budget terminology.
+Validation pairs showed [X%] agreement with expected similarities.
+
+### Analogies
+
+Political analogies revealed [describe findings]. The relation "democracy:election ::
+autocracy:?" correctly identified [results], suggesting the model learned legitimate
+power source distinctions.
+
+### BoW vs. Embeddings
+
+Document similarity correlations: r = [value]. Embeddings showed higher similarity for
+documents with semantic overlap but different vocabulary (e.g., [example]). BoW
+performed better when [describe conditions].
+```
+
+## Discussion
+
+```markdown
+### When Embeddings Helped
+
+Following Rodriguez & Spirling, embeddings proved most valuable for:
+1. Identifying conceptual similarity across varied vocabulary
+2. Discovering semantic relationships (synonymy, antonymy)
+3. Capturing domain-specific political meanings
+
+### Limitations
+
+Several limitations emerged:
+1. Corpus size (500 docs) is below R&S's recommended 5000+ for fully stable embeddings
+2. Rare terms ([examples]) showed unreliable nearest neighbors
+3. Some analogies failed ([example]), suggesting training data limits
+
+### Recommendations
+
+For this research area, I recommend [custom vs. pre-trained embeddings choice]
+because [reasoning]. Validation revealed [key insight about when method works].
+```
+
+---
+
+# Common Student Errors
+
+## Error 1: Corpus Too Small
+
+**Problem:** Training on <200 documents produces unreliable embeddings
+
+**Fix:** 
+- Minimum 500 documents for domain embeddings
+- Use pre-trained if corpus is smaller
+- Consider combining with larger related corpus
+
+## Error 2: No Validation
+
+**Problem:** Reporting embeddings without checking quality
+
+**Fix:**
+- Require at least 2 validation strategies
+- Word pair similarities (quantitative)
+- Qualitative review (read nearest neighbors)
+
+## Error 3: Over-interpreting Analogies
+
+**Problem:** "The model discovered that X relates to Y!"
+
+**Fix:**
+- Embeddings reflect training data, not truth
+- May capture biases and stereotypes
+- Always validate against substantive knowledge
+
+## Error 4: Ignoring BoW Baseline
+
+**Problem:** Using embeddings without comparing to simpler method
+
+**Fix:**
+- Always start with BoW baseline
+- Show embeddings improve performance
+- Discuss trade-offs (interpretability vs. semantic depth)
+
+## Error 5: Wrong Parameters
+
+**Problem:** dim=10 or window=50 (unreasonable choices)
+
+**Fix:**
+- Standard ranges: dim 50-300, window 3-10
+- Higher dim needs more data
+- Larger window captures topical, smaller captures syntactic
+
+---
+
+# Grading Rubric
+
+| Component | Points | Criteria |
+|-----------|--------|----------|
+| **Embedding Training** | 20 | Corpus size adequate (500+), parameters justified |
+| **Semantic Relationships** | 20 | 10+ meaningful findings, substantively interpreted |
+| **Validation** | 25 | Multiple strategies, thorough analysis |
+| **BoW Comparison** | 20 | Clear comparison, understands trade-offs |
+| **Written Report** | 15 | Connects R&S, discusses limitations, clear writing |
+| **Total** | 100 | |
+
+---
+
+# Extensions for Advanced Students
+
+## 1. Subword Information (fastText)
+
+```{r fasttext, eval=FALSE}
+# fastText captures morphology
+# "democratic" → "demo" + "crat" + "ic"
+# Handles rare words better
+# Not easily available in R - point to Python resources
+```
+
+## 2. Domain Adaptation
+
+```{r domain-adapt, eval=FALSE}
+# Start with pre-trained embeddings
+# Fine-tune on political corpus
+# Best of both: general knowledge + domain specificity
+```
+
+## 3. Temporal Embeddings
+
+```{r temporal, eval=FALSE}
+# Train separate models for different time periods
+# Track how word meanings shift
+# Example: "liberal" in 1950s vs. 2020s
+```
+
+## 4. Cross-lingual Embeddings
+
+```{r crosslingual, eval=FALSE}
+# Align embedding spaces across languages
+# Find translation pairs
+# Useful for comparative politics
+```
+
+---
+
+# Teaching Notes
+
+## Key Concepts to Emphasize
+
+1. **Embeddings are learned from data, not truth**
+2. **Validation is essential** (Rodriguez & Spirling's main point)
+3. **Trade-offs**: interpretability vs. semantic depth
+4. **Context matters**: domain-specific meanings
+5. **Start simple**: BoW baseline before embeddings
+
+## Common Discussion Points
+
+**Q:** "Why not always use embeddings?"  
+**A:** "Sometimes BoW is better: more interpretable, faster, needs less data. Always compare."
+
+**Q:** "Can embeddings be biased?"  
+**A:** "Absolutely! They reflect training data. Gender, racial, political biases can be encoded."
+
+**Q:** "Pre-trained or custom?"  
+**A:** "Depends on corpus size and domain specificity. Small corpus → pre-trained. Specialized domain → custom."
+
+## Time Management
+
+- Embedding training: 2-3 hours
+- Validation tests: 2-3 hours  
+- BoW comparison: 2 hours
+- Visualization: 1-2 hours
+- Report writing: 2-3 hours
+- **Total:** 10-14 hours
+
+---
+
+# Additional Resources
+
+## Papers
+- Rodriguez & Spirling (2022) - Required reading
+- Rheault & Cochrane (2020) - Ideological placement with embeddings
+- Kozlowski et al. (2019) - Cultural dimensions in word embeddings
+
+## Code Resources
+- word2vec R package documentation
+- text2vec vignettes
+- Pre-trained embeddings: GloVe, fastText
+
+## Validation Resources
+- SimLex-999 dataset (word similarity gold standard)
+- Analogy datasets for evaluation
+
+---
+
+**Ready to grade? Use the rubric above and look for evidence students understand Rodriguez & Spirling's validation principles!**

@@ -1,313 +1,235 @@
+# Week 1: Text Fundamentals & N-grams
+## Getting Started with NLP in R
 
-# Week 1 Setup Guide
-## Getting Started with R for NLP
-
-This guide will help you set up your R environment for the NLP course. Complete these steps before Week 1.
-
----
-
-## Option 1: Local Installation (Recommended)
-
-### Step 1: Install R and RStudio
-
-1. **Install R** (version 4.3 or higher)
-   - Download from: https://cran.r-project.org/
-   - Choose your operating system
-   - Follow installation instructions
-
-2. **Install RStudio Desktop** (free version)
-   - Download from: https://posit.co/download/rstudio-desktop/
-   - Install after R is installed
-
-### Step 2: Install Required Packages
-
-Open RStudio and run this code in the Console:
-
-```{r}
-# Install core packages
-install.packages(c(
-  "tidytext",
-  "quanteda",
-  "quanteda.textplots",
-  "quanteda.textstats",
-
-  "dplyr",
-  "tidyr",
-  "stringr",
-  "readr",
-
-  "ggplot2",
-  "ggraph",
-  "igraph",
-  "wordcloud",
-  "scales",
-
-  "rmarkdown",
-  "knitr",
-  "reshape"))
-```
-
-This may take 5-10 minutes. Watch for any errors.
-
-### Step 3: Test Your Installation
-
-Create a new R script and run:
-
-```{r}
-# Load libraries
-library(tidytext)
-library(quanteda)
-library(dplyr)
-library(ggplot2)
-
-# Simple test
-data("stop_words")
-print(head(stop_words))
-
-cat("✓ Installation successful!\n")
-```
-
-If you see the stop words table, you're ready to go!
+This guide will help you get started with Week 1 materials and set up your environment for political text analysis.
 
 ---
 
-## Option 2: RStudio Cloud (If local installation fails)
+## 📚 What You'll Learn This Week
 
-1. Go to: https://posit.cloud/
-2. Create a free account
-3. Create a new project
-4. Run the package installation code from Step 2 above
+### Core Concepts
+- Text preprocessing and cleaning
+- Tokenization: breaking text into words and phrases
+- Word frequency analysis
+- N-grams: capturing local context (bigrams, trigrams)
+- TF-IDF: identifying distinctive terms
+- Document-term matrices
+- Text visualization techniques
 
-**Note:** Free tier has monthly hour limits, so use local installation if possible.
-
----
-
-## Preparing Your Corpus
-
-### Data Format
-
-Your corpus should be a CSV file with at minimum:
-
-```
-doc_id, text
-doc_001, "Your political text here..."
-doc_002, "Another document..."
-```
-
-Additional helpful columns:
-- `date` - When the text was created
-- `author` - Who wrote it
-- `source` - Where it came from
-- `category` - Your classification scheme
-
-### Loading Your Data
-
-```{r eval=FALSE}
-# Read CSV
-my_corpus <- read_csv("data/raw/my_corpus.csv")
-
-# Check structure
-glimpse(my_corpus)
-str(my_corpus)
-
-# Verify text column
-head(my_corpus$text, 3)
-```
-
-### Minimum Corpus Size
-
-- Week 1: 50+ documents recommended
-- Weeks 2-3: 100+ documents
-- Week 4: 200+ documents (for classification)
-
-**Don't have a corpus yet?** Use the sample data generator provided in the course materials.
+### Key Skills
+✅ Clean and preprocess political texts  
+✅ Tokenize documents into unigrams, bigrams, and trigrams  
+✅ Calculate and visualize word frequencies  
+✅ Build document-term matrices  
+✅ Compute TF-IDF scores to identify distinctive terms  
+✅ Create comparative visualizations across document groups  
+✅ Understand when simple frequency-based methods work (and when they don't)  
 
 ---
 
-## Common Installation Issues
+## 📦 Materials Included
 
-### Issue 1: Package Installation Fails
+1. **week1_text_fundamentals_ngrams.Rmd** - Main notebook
+   - Complete tutorial with examples
+   - Step-by-step code for all techniques
+   - Political science examples throughout
+   - Exercises to apply to your own data
 
-**Error:** `package 'X' is not available`
+2. **generate_sample_data.R** - Sample data generator
+   - Creates realistic political text corpus
+   - Use if you don't have your own corpus ready
+   - Generates 60-100 sample documents
 
-**Solution:**
-```r
-# Update R to latest version
-# Check R version
-R.version.string
-
-# Update packages
-update.packages(ask = FALSE)
-```
-
-### Issue 2: quanteda Installation Problems
-
-**Error:** Compilation errors on Mac/Linux
-
-**Solution:**
-```r
-# Install binary versions (faster, no compilation)
-install.packages("quanteda", type = "binary")
-```
-
-### Issue 3: RMarkdown Won't Knit
-
-**Error:** pandoc not found
-
-**Solution:**
-- RStudio includes pandoc, but restart RStudio
-- Or install pandoc separately: https://pandoc.org/installing.html
-
-### Issue 4: Memory Issues with Large Corpus
-
-**Error:** "cannot allocate vector of size..."
-
-**Solution:**
-```r
-# Increase memory limit (Windows)
-memory.limit(size = 8000)
-
-# Or work with a subset first
-my_corpus_sample <- my_corpus %>% slice_sample(n = 100)
-```
+3. **week1_setup_guide.md** - Installation guide
+   - R and RStudio installation
+   - Package setup
+   - Troubleshooting
+   - R basics refresher
 
 ---
 
-## R Basics Refresher
+## 📖 Required Reading
 
-### Working with Data Frames
+- Grimmer, J., & Stewart, B. M. (2013). "Text as Data: The Promise and Pitfalls of Automatic Content Analysis Methods for Political Texts." *Political Analysis*, 21(3), 267-297.
+
+---
+
+## 🚀 Getting Started
+
+### Step 1: Installation (30-60 minutes)
+
+If you haven't already, follow `week1_setup_guide.md` to:
+- Install R and RStudio
+- Install required packages
+- Test your installation
+
+### Step 2: Get Sample Data (5 minutes)
+
+If you don't have your own corpus yet:
 
 ```r
-# Load dplyr
-library(dplyr)
+# Run the sample data generator
+source("generate_sample_data.R")
 
-# Select columns
-my_data %>% select(doc_id, text, date)
-
-# Filter rows
-my_data %>% filter(year == 2024)
-
-# Create new column
-my_data %>% mutate(text_length = nchar(text))
-
-# Group and summarize
-my_data %>%
-  group_by(category) %>%
-  summarize(n_docs = n())
-
-# Pipe multiple operations
-my_data %>%
-  filter(year >= 2020) %>%
-  mutate(decade = "2020s") %>%
-  select(doc_id, text, decade)
+# This creates sample_political_corpus.csv
+# 60 documents with party, topic, and metadata
 ```
 
-### Basic String Operations
+### Step 3: Work Through the Notebook (2-3 hours)
 
 ```r
-library(stringr)
-
-# Convert to lowercase
-str_to_lower("Hello World")
-
-# Remove punctuation
-str_replace_all("Hello, World!", "[[:punct:]]", "")
-
-# Count characters
-nchar("Hello World")
-
-# Detect pattern
-str_detect("Hello World", "World")
-
-# Extract pattern
-str_extract("Email: test@email.com", "\\S+@\\S+")
+# Open week1_text_fundamentals_ngrams.Rmd in RStudio
+# Run each code chunk sequentially
+# Read the explanations
+# Try modifying the examples
 ```
 
-### Basic Visualization
+### Step 4: Apply to Your Data (3-4 hours)
+
+- Load your own corpus (50+ documents recommended)
+- Adapt the code examples
+- Complete the exercises
+- Create visualizations
+
+
+---
+
+## 💻 Required Software
+
+- **R** (version 4.3 or higher) - Download from https://cran.r-project.org/
+- **RStudio** (latest version) - Download from https://posit.co/download/rstudio-desktop/
+
+## 📦 Required R Packages
 
 ```r
-library(ggplot2)
+# Core text processing
+install.packages(c("tidytext", "quanteda", "stringr", "dplyr", "tidyr"))
 
-# Bar chart
-ggplot(data, aes(x = category, y = count)) +
-  geom_col() +
-  labs(title = "My Title")
+# Visualization
+install.packages(c("ggplot2", "ggraph", "igraph", "wordcloud"))
 
-# Line plot
-ggplot(data, aes(x = year, y = frequency, color = party)) +
-  geom_line() +
-  geom_point()
-
-# Save plot
-ggsave("output/figures/my_plot.png", width = 10, height = 6)
+# Utilities
+install.packages(c("rmarkdown", "knitr"))
 ```
+
+See `week1_setup_guide.md` for detailed installation instructions and troubleshooting.
 
 ---
 
-## Working with R Markdown
+## 📊 Data Requirements
 
-### Creating a New Notebook
+### Minimum Corpus Specifications
+- **50+ documents** for Week 1
+- CSV format with columns:
+  - `doc_id` (unique identifier)
+  - `text` (document text)
+  - Optional: metadata (date, author, category, etc.)
 
-1. File → New File → R Markdown
-2. Give it a title
-3. Choose HTML output
-4. Click OK
-
-### Basic Syntax
-
-```markdown
-# Heading 1
-## Heading 2
-### Heading 3
-
-**bold text**
-*italic text*
-
-- Bullet point
-- Another point
-
-1. Numbered list
-2. Second item
+### Don't Have a Corpus?
+Use the provided sample data generator:
+```r
+source("generate_sample_data.R")
 ```
-
-### Code Chunks
-
-Insert with: Ctrl+Alt+I (Windows) or Cmd+Option+I (Mac)
-
-```{r}
-# Your R code here
-my_data <- read_csv("data.csv")
-```
-
-### Knitting
-
-Click "Knit" button or press Ctrl+Shift+K
-
-This creates an HTML document with your code, results, and visualizations.
+This creates a corpus of 60 political documents with party, topic, and temporal metadata.
 
 ---
 
-### Quick Corpus Statistics
+## 📝 What You'll Produce
 
-```{r}
-# Check your corpus
-corpus_df %>%
-  summarize(
-    n_docs = n(),
-    total_chars = sum(nchar(text)),
-    avg_length = mean(nchar(text)),
-    min_length = min(nchar(text)),
-    max_length = max(nchar(text))
-  )
-```
+By the end of Week 1, you'll have:
+
+- [ ] **Data Preparation**
+  - Cleaned corpus with 50+ documents
+  - Clear metadata for grouping
+
+- [ ] **Frequency Analysis**
+  - Unigram frequency tables
+  - Top words visualizations
+  - Comparison clouds for 2+ groups
+
+- [ ] **N-gram Analysis**
+  - Bigram and trigram extraction
+  - Network visualization of bigrams
+  - 10+ meaningful n-grams identified
+
+- [ ] **TF-IDF Analysis**
+  - TF-IDF scores by document and group
+  - Visualizations of distinctive terms
+  - 5+ distinctive terms per group identified
+
+- [ ] **Written Analysis**
+  - How do these methods apply to your research?
+  - What did frequency methods reveal?
+  - Where did these methods fall short?
+  - Connection to Grimmer & Stewart (2013)
 
 ---
 
-## Ready to Start!
 
-Once you've completed this setup:
+## 🔧 Troubleshooting
 
-1. Open `week1_text_fundamentals_ngrams.Rmd`
-2. Work through the notebook
-3. Apply to your own corpus
-4. Complete the exercises
+### Common Issues
+
+**Problem:** Packages won't install  
+**Solution:** Update R to latest version, try `update.packages()`
+
+**Problem:** RMarkdown won't knit  
+**Solution:** Restart RStudio, check pandoc installation
+
+**Problem:** Memory errors with large corpus  
+**Solution:** Start with a subset (`corpus %>% slice_sample(n = 50)`)
+
+**Problem:** Text encoding issues  
+**Solution:** 
+```r
+my_data <- read_csv("file.csv", locale = locale(encoding = "UTF-8"))
+```
+
+**Problem:** Visualizations not appearing  
+**Solution:** Check plot panel in RStudio, ensure packages loaded
+
+See `week1_setup_guide.md` for more detailed troubleshooting.
+
+---
+
+## 📚 Additional Resources
+
+### Learning R
+- R for Data Science: https://r4ds.hadley.nz/
+- RStudio Education: https://education.rstudio.com/
+- RStudio cheatsheets: https://posit.co/resources/cheatsheets/
+
+### Text Analysis in R
+- Text Mining with R: https://www.tidytextmining.com/
+- Quanteda tutorials: https://tutorials.quanteda.io/
+
+### Getting Help
+- Check setup guide first
+- Try examples with sample data
+- Search error messages
+- Read package documentation: `?function_name`
+
+---
+
+## ✅ Ready to Start?
+
+1. ✓ R and RStudio installed
+2. ✓ Packages installed and tested
+3. ✓ Corpus prepared (or sample data generated)
+4. ✓ Read Grimmer & Stewart (2013)
+
+**Begin with:** `week1_text_fundamentals_ngrams.Rmd`
+
+---
+
+## 🎯 Learning Tips
+
+1. **Run code line by line** - Don't just execute entire chunks without reading
+2. **Modify examples** - Change parameters to see what happens
+3. **Start simple** - Use sample data before your own corpus
+4. **Read the paper first** - Grimmer & Stewart provides essential context
+5. **Save often** - Ctrl/Cmd+S frequently
+6. **Comment your code** - Explain what you're doing
+7. **Ask questions** - No question is too basic
+
+**Remember:** Simple methods are powerful! Don't rush to complexity before mastering the fundamentals.

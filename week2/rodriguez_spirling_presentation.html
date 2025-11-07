@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Embeddings: Rodriguez & Spirling (2022)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/serif.css">
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+        }
+        .reveal h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+        }
+        .reveal h2 {
+            font-size: 1.8em;
+            color: #34495e;
+        }
+        .reveal h3 {
+            font-size: 1.4em;
+            color: #7f8c8d;
+        }
+        .reveal {
+            font-size: 32px;
+        }
+        .reveal ul, .reveal ol {
+            margin-top: 0.5em;
+        }
+        .reveal li {
+            margin-bottom: 0.5em;
+        }
+        .principle-box {
+            background-color: #ecf0f1;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .warning-box {
+            background-color: #fff5e6;
+            border-left: 5px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .method-box {
+            background-color: #e8f5e9;
+            border-left: 5px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .quote {
+            font-style: italic;
+            color: #555;
+            border-left: 3px solid #ccc;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+        .small-text {
+            font-size: 0.7em;
+        }
+        .citation {
+            font-size: 0.6em;
+            color: #7f8c8d;
+            margin-top: 2em;
+        }
+        .columns {
+            display: flex;
+            gap: 2em;
+        }
+        .column {
+            flex: 1;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .fragment.current-visible.visible:not(.current-fragment) {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Title Slide -->
+            <section>
+                <h1>Word Embeddings</h1>
+                <h3>What Works, What Doesn't, and How to Tell the Difference for Applied Research</h3>
+                <p style="margin-top: 2em;">
+                    <strong>Pedro L. Rodriguez & Arthur Spirling</strong><br>
+                    <em>Journal of Politics</em>, 2022
+                </p>
+                <p style="margin-top: 2em; font-size: 0.8em;">
+                    Week 2: NLP for Political Science<br>
+                    November 2025
+                </p>
+            </section>
+
+            <!-- Why This Paper Matters -->
+            <section>
+                <h2>Why This Paper Matters</h2>
+                <ul>
+                    <li class="fragment">Practical guide to word embeddings for political scientists</li>
+                    <li class="fragment">Cuts through hype: when do embeddings actually help?</li>
+                    <li class="fragment">Provides <span class="highlight">concrete validation strategies</span></li>
+                    <li class="fragment">Based on extensive empirical testing</li>
+                </ul>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    "Word embeddings are powerful, but not magic."
+                </p>
+            </section>
+
+            <!-- The Challenge -->
+            <section>
+                <h2>The Word Embedding Revolution</h2>
+                <div class="columns">
+                    <div class="column">
+                        <h3>The Promise</h3>
+                        <ul>
+                            <li>Capture semantic meaning</li>
+                            <li>Handle synonyms</li>
+                            <li>"democracy" ≈ "freedom"</li>
+                            <li>Vector arithmetic works!</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>The Questions</h3>
+                        <ul>
+                            <li>When do they actually help?</li>
+                            <li>How much data do I need?</li>
+                            <li>Pre-trained or custom?</li>
+                            <li>How do I validate them?</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    Rodriguez & Spirling provide evidence-based answers.
+                </p>
+            </section>
+
+            <!-- Core Question -->
+            <section>
+                <h2>The Central Question</h2>
+                <div class="principle-box" style="font-size: 1.2em; text-align: center;">
+                    <p><strong>"Do word embeddings improve performance on downstream tasks relevant to political science?"</strong></p>
+                </div>
+                <p class="fragment" style="margin-top: 1em;">Their answer: <span class="highlight">It depends!</span></p>
+                <ul class="fragment">
+                    <li>Depends on your task</li>
+                    <li>Depends on your corpus size</li>
+                    <li>Depends on your domain</li>
+                    <li>Depends on what you compare against</li>
+                </ul>
+            </section>
+
+            <!-- Key Insight 1: Corpus Size -->
+            <section>
+                <h2>Key Finding 1: Size Matters (A Lot)</h2>
+                <div class="method-box">
+                    <p><strong>Minimum corpus sizes for reliable embeddings:</strong></p>
+                    <ul class="small-text">
+                        <li>Very small (<500 docs): Don't bother, use pre-trained</li>
+                        <li>Small (500-5,000 docs): Marginal improvement over BoW</li>
+                        <li>Medium (5,000-50,000 docs): Embeddings start helping</li>
+                        <li>Large (50,000+ docs): Clear advantages</li>
+                    </ul>
+                </div>
+                <p class="fragment warning-box small-text">
+                    ⚠️ <strong>Critical point:</strong> Most political science corpora are "small" by these standards!
+                </p>
+            </section>
+
+            <!-- Corpus Size Example -->
+            <section>
+                <h2>Why Size Matters: Co-occurrence Patterns</h2>
+                <div style="font-size: 0.8em;">
+                    <p>Word2Vec learns from context windows:</p>
+                    <div class="fragment">
+                        <p><strong>Small corpus (100 docs):</strong></p>
+                        <ul class="small-text">
+                            <li>"democracy" appears near: elections, voting</li>
+                            <li>Not enough data to learn full semantic space</li>
+                            <li>Unstable representations</li>
+                        </ul>
+                    </div>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p><strong>Large corpus (10,000 docs):</strong></p>
+                        <ul class="small-text">
+                            <li>"democracy" appears near: elections, voting, freedom, rights, representation, accountability, transparency...</li>
+                            <li>Rich co-occurrence patterns</li>
+                            <li>Stable, meaningful representations</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment highlight" style="margin-top: 1em;">More data = better embeddings</p>
+            </section>
+
+            <!-- Key Insight 2: When Embeddings Help -->
+            <section>
+                <h2>Key Finding 2: When Embeddings Help</h2>
+                <div class="method-box">
+                    <p><strong>Embeddings outperform bag-of-words when:</strong></p>
+                    <ol class="small-text">
+                        <li class="fragment"><strong>Varied vocabulary:</strong> Authors use different words for same concept</li>
+                        <li class="fragment"><strong>Semantic similarity matters:</strong> Need to find conceptually related docs</li>
+                        <li class="fragment"><strong>Synonym handling:</strong> "nation", "country", "state" should be similar</li>
+                        <li class="fragment"><strong>Large corpus:</strong> Enough data to learn patterns</li>
+                    </ol>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-size: 0.9em;">
+                    <strong>Example:</strong> Finding bills about "healthcare" that use terms like "medical", "insurance", "Medicare", "coverage"
+                </p>
+            </section>
+
+            <!-- Key Insight 3: When Embeddings Don't Help -->
+            <section>
+                <h2>Key Finding 3: When Embeddings Don't Help</h2>
+                <div class="warning-box">
+                    <p><strong>Embeddings may not improve (or can hurt) when:</strong></p>
+                    <ol class="small-text">
+                        <li class="fragment"><strong>Small corpus:</strong> Not enough data for stable patterns</li>
+                        <li class="fragment"><strong>Exact keywords matter:</strong> Looking for specific legal terms</li>
+                        <li class="fragment"><strong>High interpretability needed:</strong> BoW features are clearer</li>
+                        <li class="fragment"><strong>Domain mismatch:</strong> Pre-trained embeddings don't fit your context</li>
+                        <li class="fragment"><strong>Poor validation:</strong> Not checking if they actually work</li>
+                    </ol>
+                </div>
+                <p class="fragment highlight" style="margin-top: 1em;">Don't assume complex = better!</p>
+            </section>
+
+            <!-- Custom vs Pre-trained -->
+            <section>
+                <h2>Custom vs. Pre-trained Embeddings</h2>
+                <table style="font-size: 0.65em; width: 100%;">
+                    <thead>
+                        <tr style="background: #3498db; color: white;">
+                            <th>Aspect</th>
+                            <th>Custom (e.g., Word2Vec on your corpus)</th>
+                            <th>Pre-trained (e.g., GloVe)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="fragment">
+                            <td><strong>Best for</strong></td>
+                            <td>Large, domain-specific corpus</td>
+                            <td>Small corpus or general language</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Data needs</strong></td>
+                            <td>5,000+ documents</td>
+                            <td>Any size</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Domain fit</strong></td>
+                            <td>Perfect for your domain</td>
+                            <td>May miss specialized meanings</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Coverage</strong></td>
+                            <td>Only words in your corpus</td>
+                            <td>Broad vocabulary</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Bias</strong></td>
+                            <td>Your corpus biases</td>
+                            <td>Internet/news biases</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="fragment" style="margin-top: 1em; font-size: 0.8em; font-style: italic;">
+                    Rodriguez & Spirling: Try both and compare!
+                </p>
+            </section>
+
+            <!-- Validation Framework -->
+            <section>
+                <h2>The Validation Framework</h2>
+                <div class="principle-box">
+                    <p><strong>Three essential validation strategies:</strong></p>
+                    <ol>
+                        <li class="fragment"><strong>Intrinsic:</strong> Do word similarities make sense?</li>
+                        <li class="fragment"><strong>Extrinsic:</strong> Do they improve downstream tasks?</li>
+                        <li class="fragment"><strong>Qualitative:</strong> Expert review of results</li>
+                    </ol>
+                </div>
+                <p class="fragment warning-box small-text" style="margin-top: 1em;">
+                    ⚠️ <strong>Never report embeddings without validation!</strong> This is the paper's strongest message.
+                </p>
+            </section>
+
+            <!-- Intrinsic Validation -->
+            <section>
+                <h2>Validation 1: Intrinsic</h2>
+                <div class="method-box">
+                    <p class="small-text"><strong>Question: Do word similarities match our expectations?</strong></p>
+                    <div class="fragment">
+                        <p><strong>Test pairs with known relationships:</strong></p>
+                        <ul class="small-text">
+                            <li>Synonyms: "democracy" ↔ "republic" (should be high)</li>
+                            <li>Antonyms: "democracy" ↔ "autocracy" (medium - related but opposite)</li>
+                            <li>Related: "election" ↔ "voting" (should be high)</li>
+                            <li>Unrelated: "democracy" ↔ "banana" (should be low)</li>
+                        </ul>
+                    </div>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p class="small-text"><strong>Compute correlation with gold standard datasets:</strong></p>
+                        <ul class="small-text">
+                            <li>SimLex-999: Word similarity judgments</li>
+                            <li>Create domain-specific test sets</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Extrinsic Validation -->
+            <section>
+                <h2>Validation 2: Extrinsic</h2>
+                <div class="method-box">
+                    <p class="small-text"><strong>Question: Do embeddings improve performance on real tasks?</strong></p>
+                    <div class="fragment">
+                        <p><strong>Compare methods on downstream tasks:</strong></p>
+                        <table style="font-size: 0.6em; width: 100%;">
+                            <thead>
+                                <tr style="background: #ecf0f1;">
+                                    <th>Task</th>
+                                    <th>BoW Accuracy</th>
+                                    <th>Embedding Accuracy</th>
+                                    <th>Winner</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Document classification</td>
+                                    <td>78%</td>
+                                    <td>82%</td>
+                                    <td>✓ Embeddings</td>
+                                </tr>
+                                <tr>
+                                    <td>Document similarity</td>
+                                    <td>0.65</td>
+                                    <td>0.73</td>
+                                    <td>✓ Embeddings</td>
+                                </tr>
+                                <tr>
+                                    <td>Keyword matching</td>
+                                    <td>91%</td>
+                                    <td>87%</td>
+                                    <td>✓ BoW</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-size: 0.8em;">
+                    <strong>Key point:</strong> Embeddings must demonstrate improvement on YOUR task
+                </p>
+            </section>
+
+            <!-- Qualitative Validation -->
+            <section>
+                <h2>Validation 3: Qualitative</h2>
+                <div class="method-box">
+                    <p class="small-text"><strong>Question: Do the nearest neighbors make substantive sense?</strong></p>
+                    <div class="fragment">
+                        <p><strong>Example: Words most similar to "democracy"</strong></p>
+                        <div class="columns" style="margin-top: 1em;">
+                            <div class="column">
+                                <p class="small-text"><strong>Good embeddings:</strong></p>
+                                <ul class="small-text">
+                                    <li>republic (0.87)</li>
+                                    <li>freedom (0.81)</li>
+                                    <li>elections (0.79)</li>
+                                    <li>representation (0.76)</li>
+                                </ul>
+                            </div>
+                            <div class="column">
+                                <p class="small-text"><strong>Bad embeddings:</strong></p>
+                                <ul class="small-text">
+                                    <li>established (0.72)</li>
+                                    <li>period (0.68)</li>
+                                    <li>various (0.65)</li>
+                                    <li>important (0.63)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 0.5em; font-size: 0.8em;">
+                    <strong>Action:</strong> Read 20-30 nearest neighbor lists. Do they make sense?
+                </p>
+            </section>
+
+            <!-- The Bias Problem -->
+            <section>
+                <h2>The Bias Problem</h2>
+                <div class="warning-box">
+                    <p><strong>Embeddings encode biases from training data:</strong></p>
+                    <ul class="small-text">
+                        <li class="fragment">Gender: "he:doctor :: she:nurse"</li>
+                        <li class="fragment">Politics: "democrat:urban :: republican:rural"</li>
+                        <li class="fragment">Race: Stereotypical associations</li>
+                        <li class="fragment">History: Outdated attitudes from historical texts</li>
+                    </ul>
+                </div>
+                <div class="fragment" style="margin-top: 1em;">
+                    <p><strong>Rodriguez & Spirling's advice:</strong></p>
+                    <ul class="small-text">
+                        <li>✓ Be aware of potential biases</li>
+                        <li>✓ Test for problematic associations</li>
+                        <li>✓ Decide if debiasing is needed for your task</li>
+                        <li>✓ Report biases discovered</li>
+                        <li>✗ Don't assume embeddings are "objective"</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Practical Recommendations -->
+            <section>
+                <h2>Practical Recommendations</h2>
+                <div class="principle-box small-text">
+                    <p><strong>Rodriguez & Spirling's workflow:</strong></p>
+                    <ol>
+                        <li class="fragment"><strong>Start with BoW baseline</strong>
+                            <ul><li>Simple, interpretable, fast</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Try pre-trained embeddings</strong>
+                            <ul><li>GloVe, fastText for general language</li></ul>
+                        </li>
+                        <li class="fragment"><strong>If corpus is large (5K+ docs), train custom</strong>
+                            <ul><li>Capture domain-specific meanings</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Validate thoroughly</strong>
+                            <ul><li>Intrinsic, extrinsic, qualitative</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Compare all approaches</strong>
+                            <ul><li>Report which works best and why</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Be honest about limitations</strong>
+                            <ul><li>Where do embeddings fail?</li></ul>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Parameter Choices -->
+            <section>
+                <h2>Parameter Choices Matter</h2>
+                <div class="method-box small-text">
+                    <p><strong>Key Word2Vec parameters:</strong></p>
+                    <table style="font-size: 0.9em; width: 100%;">
+                        <thead>
+                            <tr style="background: #ecf0f1;">
+                                <th>Parameter</th>
+                                <th>Typical Range</th>
+                                <th>Effect</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="fragment">
+                                <td><strong>dim</strong></td>
+                                <td>50-300</td>
+                                <td>Higher = more nuance, needs more data</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td><strong>window</strong></td>
+                                <td>3-10</td>
+                                <td>Larger = topical similarity; smaller = syntactic</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td><strong>min_count</strong></td>
+                                <td>2-5</td>
+                                <td>Remove rare words (reduces noise)</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td><strong>iter</strong></td>
+                                <td>10-20</td>
+                                <td>More iterations = more training</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="fragment" style="margin-top: 0.5em; font-size: 0.8em;">
+                    <strong>Advice:</strong> Start with defaults (dim=100, window=5), tune only if needed
+                </p>
+            </section>
+
+            <!-- Common Mistakes -->
+            <section>
+                <h2>Common Mistakes to Avoid</h2>
+                <ol>
+                    <li class="fragment"><strong>Training on tiny corpus</strong>
+                        <p class="small-text">500 docs is not enough for reliable embeddings</p>
+                    </li>
+                    <li class="fragment"><strong>No validation</strong>
+                        <p class="small-text">Assuming embeddings work without checking</p>
+                    </li>
+                    <li class="fragment"><strong>Not comparing to BoW</strong>
+                        <p class="small-text">Need to show embeddings improve over baseline</p>
+                    </li>
+                    <li class="fragment"><strong>Over-interpreting analogies</strong>
+                        <p class="small-text">Vector arithmetic is cool but often fails</p>
+                    </li>
+                    <li class="fragment"><strong>Ignoring domain mismatch</strong>
+                        <p class="small-text">Wikipedia embeddings may not capture "liberal" in 1800s texts</p>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- Case Study -->
+            <section>
+                <h2>Case Study: Congressional Speeches</h2>
+                <div class="small-text">
+                    <p><strong>Task:</strong> Classify speeches by topic (economy, healthcare, security)</p>
+                    <div class="fragment">
+                        <p><strong>Corpus:</strong> 10,000 Congressional speeches</p>
+                        <table style="font-size: 0.9em; margin-top: 1em;">
+                            <thead>
+                                <tr style="background: #3498db; color: white;">
+                                    <th>Method</th>
+                                    <th>Accuracy</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="fragment">
+                                    <td>BoW + Logistic</td>
+                                    <td>81%</td>
+                                    <td>Baseline</td>
+                                </tr>
+                                <tr class="fragment">
+                                    <td>Pre-trained GloVe</td>
+                                    <td>79%</td>
+                                    <td>Slightly worse</td>
+                                </tr>
+                                <tr class="fragment">
+                                    <td>Custom Word2Vec</td>
+                                    <td>84%</td>
+                                    <td>Best! Domain-specific</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="fragment" style="margin-top: 1em;">
+                        <strong>Lesson:</strong> Custom embeddings helped because corpus was large and domain-specific
+                    </p>
+                </div>
+            </section>
+
+            <!-- Relation to Week 2 Lab -->
+            <section>
+                <h2>Connecting to Week 2 Lab</h2>
+                <div class="columns small-text">
+                    <div class="column">
+                        <h3>What You're Doing</h3>
+                        <ul>
+                            <li>Training Word2Vec</li>
+                            <li>Testing word similarities</li>
+                            <li>Computing analogies</li>
+                            <li>Visualizing embeddings</li>
+                            <li>Comparing to BoW</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>R&S Principles</h3>
+                        <ul>
+                            <li><span class="highlight">Validate!</span> Intrinsic + extrinsic</li>
+                            <li><span class="highlight">Compare</span> to BoW baseline</li>
+                            <li><span class="highlight">Be honest</span> about failures</li>
+                            <li><span class="highlight">Size matters</span> - corpus not huge enough?</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    Apply their validation framework to your embeddings!
+                </p>
+            </section>
+
+            <!-- Decision Framework -->
+            <section>
+                <h2>Decision Framework: Should I Use Embeddings?</h2>
+                <div style="font-size: 0.75em; text-align: left;">
+                    <p class="fragment"><strong>Q: How large is my corpus?</strong></p>
+                    <ul class="fragment">
+                        <li><500 docs → Use pre-trained embeddings (or stick with BoW)</li>
+                        <li>500-5,000 docs → Try both, validate carefully</li>
+                        <li>5,000+ docs → Train custom embeddings</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 0.5em;"><strong>Q: What's my task?</strong></p>
+                    <ul class="fragment">
+                        <li>Finding semantically similar docs → Try embeddings</li>
+                        <li>Exact keyword matching → Stick with BoW</li>
+                        <li>Need interpretability → Start with BoW</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 0.5em;"><strong>Q: Do I have time to validate?</strong></p>
+                    <ul class="fragment">
+                        <li>No → Use BoW (known quantity)</li>
+                        <li>Yes → Try embeddings, validate thoroughly</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Critical Questions -->
+            <!-- <section>
+                <h2>Critical Questions to Always Ask</h2>
+                <ol>
+                    <li class="fragment">Is my corpus <span class="highlight">large enough</span>?</li>
+                    <li class="fragment">Have I <span class="highlight">validated</span> with multiple strategies?</li>
+                    <li class="fragment">Do embeddings <span class="highlight">improve over BoW</span> on my task?</li>
+                    <li class="fragment">Do nearest neighbors <span class="highlight">make substantive sense</span>?</li>
+                    <li class="fragment">Have I checked for <span class="highlight">biases</span>?</li>
+                    <li class="fragment">Am I using embeddings because they're <span class="highlight">cool</span> or because they <span class="highlight">work</span>?</li>
+                    <li class="fragment">What are the <span class="highlight">limitations</span>?</li>
+                </ol>
+            </section> -->
+
+            <!-- Key Takeaways -->
+            <!-- <section>
+                <h2>Key Takeaways</h2>
+                <div class="principle-box">
+                    <ol>
+                        <li><strong>Corpus size is critical</strong>
+                            <p class="small-text">5,000+ documents for reliable custom embeddings</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Always validate with multiple strategies</strong>
+                            <p class="small-text">Intrinsic, extrinsic, qualitative - all three!</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Compare to BoW baseline</strong>
+                            <p class="small-text">Must demonstrate improvement</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Custom vs. pre-trained depends on context</strong>
+                            <p class="small-text">Try both, see what works</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Be honest about failures</strong>
+                            <p class="small-text">Not working is a valid finding</p>
+                        </li>
+                    </ol>
+                </div>
+            </section> -->
+
+            <!-- The Big Picture -->
+            <!-- <section>
+                <h2>The Big Picture</h2>
+                <div class="quote">
+                    "Word embeddings can be extremely powerful for capturing semantic relationships in text, but their effectiveness depends critically on having sufficient data, appropriate validation, and realistic expectations about what they can achieve."
+                    <p style="text-align: right; margin-top: 1em;">— Rodriguez & Spirling (paraphrased), 2022</p>
+                </div>
+                <p class="fragment" style="margin-top: 1.5em; font-size: 1.1em; text-align: center;">
+                    <strong>This week: Learn to validate embeddings properly!</strong>
+                </p>
+            </section> -->
+
+            <!-- Discussion Questions -->
+            <!-- <section>
+                <h2>Discussion Questions</h2>
+                <ol>
+                    <li class="fragment">Is your corpus large enough for custom embeddings? If not, what's your alternative?</li>
+                    <li class="fragment">How would you validate embeddings for your specific research question?</li>
+                    <li class="fragment">When might bag-of-words actually be better than embeddings for political science research?</li>
+                    <li class="fragment">What biases might appear in embeddings trained on political texts? How would you test for them?</li>
+                </ol>
+            </section> -->
+
+            <!-- Assignment Connection -->
+            <section>
+                <h2>This Week's Assignment</h2>
+                <div class="small-text">
+                    <p><strong>Apply Rodriguez & Spirling's framework:</strong></p>
+                    <ul>
+                        <li class="fragment"><strong>Train embeddings</strong>
+                            <ul><li>On your corpus (or extended sample data)</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Validate with all three strategies</strong>
+                            <ul><li>Intrinsic: word pair similarities</li>
+                            <li>Extrinsic: compare BoW vs. embeddings on document similarity</li>
+                            <li>Qualitative: read and assess nearest neighbors</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Be honest about results</strong>
+                            <ul><li>When do embeddings help?</li>
+                            <li>When don't they help?</li>
+                            <li>What are the limitations?</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Report in 2-page analysis</strong>
+                            <ul><li>Connect findings to R&S insights</li></ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Further Reading -->
+            <section>
+                <h2>Further Reading</h2>
+                <div class="small-text">
+                    <p><strong>Original embeddings papers:</strong></p>
+                    <ul>
+                        <li>Mikolov et al. (2013). "Efficient Estimation of Word Representations"</li>
+                        <li>Pennington et al. (2014). "GloVe: Global Vectors"</li>
+                    </ul>
+                    <p style="margin-top: 1em;"><strong>Political science applications:</strong></p>
+                    <ul>
+                        <li>Rheault & Cochrane (2020). "Word Embeddings for Ideological Placement"</li>
+                        <li>Kozlowski et al. (2019). "The Geometry of Culture"</li>
+                    </ul>
+                    <p style="margin-top: 1em;"><strong>Bias and ethics:</strong></p>
+                    <ul>
+                        <li>Bolukbasi et al. (2016). "Man is to Computer Programmer as Woman is to Homemaker?"</li>
+                        <li>Garg et al. (2018). "Word Embeddings Quantify Historical Stereotypes"</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Closing -->
+            <!-- <section>
+                <h2>Remember...</h2>
+                <div style="font-size: 1.2em; text-align: center; margin: 2em 0;">
+                    <p class="fragment" style="margin: 1em 0;">📊 <strong>Size matters (5,000+ docs for custom)</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">✅ <strong>Validate, validate, validate</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">⚖️ <strong>Always compare to BoW baseline</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">🎯 <strong>Let task determine method</strong></p>
+                </div>
+                <p class="fragment" style="margin-top: 2em; font-size: 0.9em;">
+                    Questions? Let's discuss!
+                </p>
+            </section> -->
+
+            <!-- Thank You -->
+            <section>
+                <h1>Thank You!</h1>
+                <div style="margin-top: 2em;">
+                    <p>Now let's train some embeddings and validate them properly...</p>
+                </div>
+                <div class="citation">
+                    <p><strong>Full Citation:</strong><br>
+                    Rodriguez, Pedro L., and Arthur Spirling. 2022. "Word Embeddings: What Works, What Doesn't, and How to Tell the Difference for Applied Research." <em>Journal of Politics</em> 84(1): 101-115.</p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: true,
+            transition: 'slide',
+            width: 1200,
+            height: 700,
+            margin: 0.04,
+            controls: true,
+            progress: true,
+            center: true,
+            fragments: true
+        });
+    </script>
+</body>
+</html>
