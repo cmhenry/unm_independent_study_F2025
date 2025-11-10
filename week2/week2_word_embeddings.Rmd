@@ -255,7 +255,7 @@ Higher cosine similarity = more semantically related words.
 
 # Option 2: Use sample data from Week 1
 source("generate_sample_data.R")
-political_corpus <- generate_sample_corpus(100)  # Larger corpus for embeddings
+political_corpus <- generate_extended_corpus(500)  # Larger corpus for embeddings
 
 # Prepare text for Word2Vec (one document per line)
 corpus_text <- political_corpus$text
@@ -354,7 +354,7 @@ predict(w2v_model, c("security"), type = "nearest", top_n = 10)
 
 ```{r compare-concepts}
 # Define political concepts
-concepts <- c("democracy", "security", "economy", "healthcare")
+concepts <- c("security", "economy", "healthcare")
 
 # Get similarities for each
 similar_to_concepts <- lapply(concepts, function(word) {
@@ -419,20 +419,20 @@ word_pairs <- word_pairs %>%
 print(word_pairs)
 
 # Visualize
-word_pairs %>%
-  filter(!is.na(similarity)) %>%
-  mutate(pair = paste(word1, "↔", word2)) %>%
-  ggplot(aes(x = reorder(pair, similarity), y = similarity, fill = expected)) +
-  geom_col() +
-  coord_flip() +
-  scale_fill_manual(values = c("High" = "#27ae60", "Medium" = "#f39c12", "Low" = "#e74c3c")) +
-  labs(
-    title = "Semantic Similarity Between Word Pairs",
-    subtitle = "Word2Vec embeddings capture expected relationships",
-    x = NULL,
-    y = "Cosine Similarity",
-    fill = "Expected\nSimilarity"
-  )
+# word_pairs %>%
+#   filter(!is.na(similarity)) %>%
+#   mutate(pair = paste(word1, "↔", word2)) %>%
+#   ggplot(aes(x = reorder(pair, similarity), y = similarity, fill = expected)) +
+#   geom_col() +
+#   coord_flip() +
+#   scale_fill_manual(values = c("High" = "#27ae60", "Medium" = "#f39c12", "Low" = "#e74c3c")) +
+#   labs(
+#     title = "Semantic Similarity Between Word Pairs",
+#     subtitle = "Word2Vec embeddings capture expected relationships",
+#     x = NULL,
+#     y = "Cosine Similarity",
+#     fill = "Expected\nSimilarity"
+#   )
 ```
 
 ---

@@ -1,0 +1,61 @@
+doc_id,text,party,topic,year,speaker_type
+doc_001,We need to strengthen the middle class through tax fairness and economic opportunity,Democrat,Economy,2024,Senator
+doc_002,We need to strengthen the middle class through tax fairness and economic opportunity,Democrat,Economy,2024,Representative
+doc_003,Economic recovery requires supporting small businesses and ensuring fair wages for all workers,Democrat,Economy,2022,Governor
+doc_004,Economic recovery requires supporting small businesses and ensuring fair wages for all workers,Democrat,Economy,2020,Governor
+doc_005,We need to strengthen the middle class through tax fairness and economic opportunity,Democrat,Economy,2023,Senator
+doc_006,Healthcare costs are crushing families and we must make quality care affordable for everyone,Democrat,Economy,2020,President
+doc_007,Creating clean energy jobs will drive economic growth while protecting our planet,Democrat,Economy,2020,Representative
+doc_008,We must invest in infrastructure and create millions of good-paying jobs for working families across America,Democrat,Economy,2022,Representative
+doc_009,Economic recovery requires supporting small businesses and ensuring fair wages for all workers,Democrat,Economy,2023,Senator
+doc_010,We need to strengthen the middle class through tax fairness and economic opportunity,Democrat,Economy,2020,Senator
+doc_011,Healthcare costs are crushing families and we must make quality care affordable for everyone,Democrat,Economy,2022,Representative
+doc_012,We need to strengthen the middle class through tax fairness and economic opportunity,Democrat,Economy,2024,Representative
+doc_013,Education is the key to opportunity and we need to invest in our schools and teachers,Democrat,Social Policy,2022,Representative
+doc_014,Protecting voting rights is essential to preserving our democratic institutions,Democrat,Social Policy,2021,Governor
+doc_015,Immigration reform should reflect our values of compassion while maintaining security,Democrat,Social Policy,2024,Representative
+doc_016,Protecting voting rights is essential to preserving our democratic institutions,Democrat,Social Policy,2024,Representative
+doc_017,Protecting voting rights is essential to preserving our democratic institutions,Democrat,Social Policy,2022,Representative
+doc_018,Women's reproductive rights must be protected as a fundamental freedom,Democrat,Social Policy,2021,Senator
+doc_019,Education is the key to opportunity and we need to invest in our schools and teachers,Democrat,Social Policy,2021,Senator
+doc_020,We must defend civil rights and fight discrimination in all its forms,Democrat,Social Policy,2021,Senator
+doc_021,We must defend civil rights and fight discrimination in all its forms,Democrat,Social Policy,2023,Senator
+doc_022,Protecting voting rights is essential to preserving our democratic institutions,Democrat,Social Policy,2021,Governor
+doc_023,Education is the key to opportunity and we need to invest in our schools and teachers,Democrat,Social Policy,2021,Senator
+doc_024,Immigration reform should reflect our values of compassion while maintaining security,Democrat,Social Policy,2023,Governor
+doc_025,Lower taxes and reduced regulations will unleash economic growth and job creation,Republican,Economy,2023,Representative
+doc_026,We must reduce the national debt and ensure fiscal responsibility for future generations,Republican,Economy,2020,Representative
+doc_027,Small government and individual liberty are the foundations of American prosperity,Republican,Economy,2022,Senator
+doc_028,Energy independence through domestic production will strengthen our economy and security,Republican,Economy,2022,Representative
+doc_029,Free market solutions drive innovation and prosperity better than government intervention,Republican,Economy,2020,Senator
+doc_030,Small government and individual liberty are the foundations of American prosperity,Republican,Economy,2022,Representative
+doc_031,Lower taxes and reduced regulations will unleash economic growth and job creation,Republican,Economy,2024,Senator
+doc_032,Lower taxes and reduced regulations will unleash economic growth and job creation,Republican,Economy,2021,President
+doc_033,Free market solutions drive innovation and prosperity better than government intervention,Republican,Economy,2022,President
+doc_034,We must reduce the national debt and ensure fiscal responsibility for future generations,Republican,Economy,2021,Representative
+doc_035,Energy independence through domestic production will strengthen our economy and security,Republican,Economy,2024,Senator
+doc_036,Small government and individual liberty are the foundations of American prosperity,Republican,Economy,2024,Senator
+doc_037,Second Amendment rights are fundamental to American liberty and must be protected,Republican,Security,2022,Representative
+doc_038,Supporting our military and veterans is essential to defending freedom,Republican,Security,2023,Senator
+doc_039,National security must remain our top priority in an increasingly dangerous world,Republican,Security,2023,Representative
+doc_040,We need strong borders to protect American citizens and maintain law and order,Republican,Security,2023,Representative
+doc_041,Second Amendment rights are fundamental to American liberty and must be protected,Republican,Security,2024,Senator
+doc_042,Second Amendment rights are fundamental to American liberty and must be protected,Republican,Security,2022,Representative
+doc_043,Law and order must be restored in our communities through supporting police,Republican,Security,2020,Representative
+doc_044,Second Amendment rights are fundamental to American liberty and must be protected,Republican,Security,2021,Governor
+doc_045,We need strong borders to protect American citizens and maintain law and order,Republican,Security,2020,Governor
+doc_046,National security must remain our top priority in an increasingly dangerous world,Republican,Security,2021,Governor
+doc_047,National security must remain our top priority in an increasingly dangerous world,Republican,Security,2024,Representative
+doc_048,Supporting our military and veterans is essential to defending freedom,Republican,Security,2022,President
+doc_049,We must work together across party lines to address the opioid crisis,Bipartisan,Bipartisan,2023,Representative
+doc_050,Rural communities need better broadband access for economic development,Bipartisan,Bipartisan,2023,Representative
+doc_051,We must work together across party lines to address the opioid crisis,Bipartisan,Bipartisan,2020,Senator
+doc_052,Infrastructure investment will create jobs and improve quality of life nationwide,Bipartisan,Bipartisan,2023,Senator
+doc_053,American innovation and competitiveness depend on STEM education,Bipartisan,Bipartisan,2020,Senator
+doc_054,American innovation and competitiveness depend on STEM education,Bipartisan,Bipartisan,2022,Representative
+doc_055,Veterans deserve our full support and quality healthcare services,Bipartisan,Bipartisan,2023,Governor
+doc_056,We must work together across party lines to address the opioid crisis,Bipartisan,Bipartisan,2022,Senator
+doc_057,Infrastructure investment will create jobs and improve quality of life nationwide,Bipartisan,Bipartisan,2024,Senator
+doc_058,We must work together across party lines to address the opioid crisis,Bipartisan,Bipartisan,2023,Senator
+doc_059,Infrastructure investment will create jobs and improve quality of life nationwide,Bipartisan,Bipartisan,2023,Representative
+doc_060,American innovation and competitiveness depend on STEM education,Bipartisan,Bipartisan,2023,Representative

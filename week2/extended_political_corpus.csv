@@ -1,0 +1,101 @@
+doc_id,text,year,month,quarter,period,doc_length
+doc_001,Free trade agreements expand markets and create economic opportunities,2019,7,Q3,Pre-Biden,70
+doc_002,School choice and competition improve educational outcomes for all students,2023,8,Q3,Biden Era,75
+doc_003,We need fair trade that prioritizes American interests and workers,2022,7,Q3,Biden Era,66
+doc_004,Public education funding is critical for equal opportunity and social mobility,2023,6,Q2,Biden Era,78
+doc_005,Digital infrastructure investment is essential for twenty-first century competitiveness,2018,7,Q3,Pre-Biden,87
+doc_006,Universal healthcare access is a fundamental right that government must guarantee,2022,6,Q2,Biden Era,81
+doc_007,We need to lower prescription drug prices and make insurance more affordable,2023,10,Q4,Biden Era,76
+doc_008,Student loan debt relief will help millions of Americans achieve financial security,2019,6,Q2,Pre-Biden,83
+doc_009,Artificial intelligence development requires ethical guidelines and oversight,2018,3,Q1,Pre-Biden,77
+doc_010,Free trade agreements expand markets and create economic opportunities,2021,2,Q1,Biden Era,70
+doc_011,Border security is essential to maintaining sovereignty and rule of law,2019,10,Q4,Pre-Biden,71
+doc_012,Climate change requires immediate action and international cooperation to prevent catastrophic outcomes,2023,12,Q4,Biden Era,103
+doc_013,Tech companies must be held accountable for content and data practices,2020,3,Q1,Pre-Biden,70
+doc_014,Free trade agreements expand markets and create economic opportunities,2018,8,Q3,Pre-Biden,70
+doc_015,Healthcare reform must protect pre-existing condition coverage for all Americans,2018,12,Q4,Pre-Biden,80
+doc_016,We need to lower prescription drug prices and make insurance more affordable,2021,2,Q1,Biden Era,76
+doc_017,Legal immigration strengthens our economy and enriches our culture,2022,8,Q3,Biden Era,66
+doc_018,We need to lower prescription drug prices and make insurance more affordable,2024,1,Q1,Biden Era,76
+doc_019,We must transition to renewable energy sources to protect our environment for future generations,2018,7,Q3,Pre-Biden,96
+doc_020,Environmental regulations should balance economic growth with conservation efforts,2024,3,Q1,Biden Era,82
+doc_021,Border security is essential to maintaining sovereignty and rule of law,2019,12,Q4,Pre-Biden,71
+doc_022,Teacher pay must be increased to attract and retain quality educators,2018,1,Q1,Pre-Biden,69
+doc_023,Market-based healthcare solutions provide choice and quality while controlling costs,2021,10,Q4,Biden Era,84
+doc_024,School choice and competition improve educational outcomes for all students,2024,4,Q2,Biden Era,75
+doc_025,Student loan debt relief will help millions of Americans achieve financial security,2024,1,Q1,Biden Era,83
+doc_026,Green technology investment will create jobs while addressing environmental challenges,2018,5,Q2,Pre-Biden,86
+doc_027,Legal immigration strengthens our economy and enriches our culture,2019,2,Q1,Pre-Biden,66
+doc_028,Climate change requires immediate action and international cooperation to prevent catastrophic outcomes,2020,11,Q4,Pre-Biden,103
+doc_029,Artificial intelligence development requires ethical guidelines and oversight,2019,8,Q3,Pre-Biden,77
+doc_030,Teacher pay must be increased to attract and retain quality educators,2023,10,Q4,Biden Era,69
+doc_031,Artificial intelligence development requires ethical guidelines and oversight,2018,8,Q3,Pre-Biden,77
+doc_032,Environmental regulations should balance economic growth with conservation efforts,2020,2,Q1,Pre-Biden,82
+doc_033,We need to lower prescription drug prices and make insurance more affordable,2020,7,Q3,Pre-Biden,76
+doc_034,Green technology investment will create jobs while addressing environmental challenges,2022,7,Q3,Biden Era,86
+doc_035,Immigration reform must provide a path to citizenship for undocumented residents,2021,7,Q3,Biden Era,80
+doc_036,Universal healthcare access is a fundamental right that government must guarantee,2021,1,Q1,Biden Era,81
+doc_037,Trade deals must protect American workers and manufacturing jobs,2021,6,Q2,Biden Era,64
+doc_038,We are a nation of immigrants and must maintain welcoming policies,2023,12,Q4,Biden Era,66
+doc_039,Climate change requires immediate action and international cooperation to prevent catastrophic outcomes,2023,3,Q1,Biden Era,103
+doc_040,Artificial intelligence development requires ethical guidelines and oversight,2023,10,Q4,Biden Era,77
+doc_041,Public education funding is critical for equal opportunity and social mobility,2022,2,Q1,Biden Era,78
+doc_042,Digital infrastructure investment is essential for twenty-first century competitiveness,2022,9,Q3,Biden Era,87
+doc_043,Green technology investment will create jobs while addressing environmental challenges,2023,8,Q3,Biden Era,86
+doc_044,Teacher pay must be increased to attract and retain quality educators,2018,1,Q1,Pre-Biden,69
+doc_045,Technology sector regulation must protect privacy while fostering innovation,2018,3,Q1,Pre-Biden,76
+doc_046,Market-based healthcare solutions provide choice and quality while controlling costs,2024,4,Q2,Biden Era,84
+doc_047,Public education funding is critical for equal opportunity and social mobility,2020,3,Q1,Pre-Biden,78
+doc_048,We need to lower prescription drug prices and make insurance more affordable,2018,7,Q3,Pre-Biden,76
+doc_049,We are a nation of immigrants and must maintain welcoming policies,2023,1,Q1,Biden Era,66
+doc_050,Healthcare reform must protect pre-existing condition coverage for all Americans,2019,12,Q4,Pre-Biden,80
+doc_051,Immigration reform must provide a path to citizenship for undocumented residents,2024,2,Q1,Biden Era,80
+doc_052,Immigration reform must provide a path to citizenship for undocumented residents,2018,8,Q3,Pre-Biden,80
+doc_053,Free trade agreements expand markets and create economic opportunities,2020,10,Q4,Pre-Biden,70
+doc_054,Climate change requires immediate action and international cooperation to prevent catastrophic outcomes,2024,4,Q2,Biden Era,103
+doc_055,We need fair trade that prioritizes American interests and workers,2022,11,Q4,Biden Era,66
+doc_056,Teacher pay must be increased to attract and retain quality educators,2021,11,Q4,Biden Era,69
+doc_057,Tech companies must be held accountable for content and data practices,2021,10,Q4,Biden Era,70
+doc_058,We are a nation of immigrants and must maintain welcoming policies,2024,12,Q4,Biden Era,66
+doc_059,Digital infrastructure investment is essential for twenty-first century competitiveness,2019,7,Q3,Pre-Biden,87
+doc_060,Teacher pay must be increased to attract and retain quality educators,2019,3,Q1,Pre-Biden,69
+doc_061,Climate change requires immediate action and international cooperation to prevent catastrophic outcomes,2020,5,Q2,Pre-Biden,103
+doc_062,Green technology investment will create jobs while addressing environmental challenges,2024,8,Q3,Biden Era,86
+doc_063,Climate change requires immediate action and international cooperation to prevent catastrophic outcomes,2022,5,Q2,Biden Era,103
+doc_064,Green technology investment will create jobs while addressing environmental challenges,2018,5,Q2,Pre-Biden,86
+doc_065,Immigration reform must provide a path to citizenship for undocumented residents,2022,7,Q3,Biden Era,80
+doc_066,Universal healthcare access is a fundamental right that government must guarantee,2024,1,Q1,Biden Era,81
+doc_067,Trade deals must protect American workers and manufacturing jobs,2019,5,Q2,Pre-Biden,64
+doc_068,Artificial intelligence development requires ethical guidelines and oversight,2020,2,Q1,Pre-Biden,77
+doc_069,Green technology investment will create jobs while addressing environmental challenges,2024,10,Q4,Biden Era,86
+doc_070,Market-based healthcare solutions provide choice and quality while controlling costs,2018,4,Q2,Pre-Biden,84
+doc_071,Immigration reform must provide a path to citizenship for undocumented residents,2018,4,Q2,Pre-Biden,80
+doc_072,Green technology investment will create jobs while addressing environmental challenges,2023,12,Q4,Biden Era,86
+doc_073,We need fair trade that prioritizes American interests and workers,2018,4,Q2,Pre-Biden,66
+doc_074,Digital infrastructure investment is essential for twenty-first century competitiveness,2023,6,Q2,Biden Era,87
+doc_075,We need fair trade that prioritizes American interests and workers,2019,10,Q4,Pre-Biden,66
+doc_076,Climate change requires immediate action and international cooperation to prevent catastrophic outcomes,2019,3,Q1,Pre-Biden,103
+doc_077,Free trade agreements expand markets and create economic opportunities,2022,7,Q3,Biden Era,70
+doc_078,Universal healthcare access is a fundamental right that government must guarantee,2019,2,Q1,Pre-Biden,81
+doc_079,School choice and competition improve educational outcomes for all students,2019,1,Q1,Pre-Biden,75
+doc_080,Global economic cooperation benefits all nations through shared prosperity,2021,10,Q4,Biden Era,74
+doc_081,Universal healthcare access is a fundamental right that government must guarantee,2018,10,Q4,Pre-Biden,81
+doc_082,Healthcare reform must protect pre-existing condition coverage for all Americans,2018,12,Q4,Pre-Biden,80
+doc_083,Public education funding is critical for equal opportunity and social mobility,2024,5,Q2,Biden Era,78
+doc_084,Environmental regulations should balance economic growth with conservation efforts,2022,3,Q1,Biden Era,82
+doc_085,Trade deals must protect American workers and manufacturing jobs,2018,1,Q1,Pre-Biden,64
+doc_086,Teacher pay must be increased to attract and retain quality educators,2021,3,Q1,Biden Era,69
+doc_087,Trade deals must protect American workers and manufacturing jobs,2019,3,Q1,Pre-Biden,64
+doc_088,We must transition to renewable energy sources to protect our environment for future generations,2021,4,Q2,Biden Era,96
+doc_089,We need fair trade that prioritizes American interests and workers,2018,4,Q2,Pre-Biden,66
+doc_090,We need fair trade that prioritizes American interests and workers,2019,5,Q2,Pre-Biden,66
+doc_091,Digital infrastructure investment is essential for twenty-first century competitiveness,2019,2,Q1,Pre-Biden,87
+doc_092,Global economic cooperation benefits all nations through shared prosperity,2021,2,Q1,Biden Era,74
+doc_093,Student loan debt relief will help millions of Americans achieve financial security,2018,10,Q4,Pre-Biden,83
+doc_094,Teacher pay must be increased to attract and retain quality educators,2021,9,Q3,Biden Era,69
+doc_095,We are a nation of immigrants and must maintain welcoming policies,2023,9,Q3,Biden Era,66
+doc_096,We need to lower prescription drug prices and make insurance more affordable,2018,5,Q2,Pre-Biden,76
+doc_097,School choice and competition improve educational outcomes for all students,2018,11,Q4,Pre-Biden,75
+doc_098,Free trade agreements expand markets and create economic opportunities,2023,1,Q1,Biden Era,70
+doc_099,Free trade agreements expand markets and create economic opportunities,2023,4,Q2,Biden Era,70
+doc_100,Healthcare reform must protect pre-existing condition coverage for all Americans,2018,1,Q1,Pre-Biden,80
