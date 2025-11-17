@@ -212,9 +212,9 @@ Even though "democracy" and "autocracy" are opposites, they appear in similar **
 
 ```{r embedding-concept, eval=FALSE}
 # Conceptual representation
-"democracy" → [0.42, -0.13, 0.67, ..., 0.31]  # 300 numbers
-"freedom"   → [0.38, -0.09, 0.71, ..., 0.28]  # 300 numbers
-"banana"    → [-0.15, 0.82, -0.44, ..., 0.53] # 300 numbers
+# "democracy" → [0.42, -0.13, 0.67, ..., 0.31]  # 300 numbers
+# "freedom"   → [0.38, -0.09, 0.71, ..., 0.28]  # 300 numbers
+# "banana"    → [-0.15, 0.82, -0.44, ..., 0.53] # 300 numbers
 ```
 
 **Key Properties:**
@@ -339,7 +339,7 @@ print(head(rownames(embeddings), 20))
 
 ```{r find-similar}
 # Find words most similar to "democracy"
-predict(w2v_model, c("democracy"), type = "nearest", top_n = 10)
+predict(w2v_model, c("healthcare"), type = "nearest", top_n = 10)
 
 # Find words similar to "economy"
 predict(w2v_model, c("economy"), type = "nearest", top_n = 10)
@@ -362,8 +362,8 @@ similar_to_concepts <- lapply(concepts, function(word) {
     sims <- predict(w2v_model, c(word), type = "nearest", top_n = 5)
     tibble(
       concept = word,
-      similar_word = sims$term2,
-      similarity = sims$similarity
+      similar_word = sims$security['term2'],
+      similarity = sims$security['similarity']
     )
   } else {
     tibble(concept = word, similar_word = NA, similarity = NA)
@@ -372,8 +372,8 @@ similar_to_concepts <- lapply(concepts, function(word) {
 
 # Visualize
 similar_to_concepts %>%
-  filter(!is.na(similar_word)) %>%
-  ggplot(aes(x = reorder(similar_word, similarity), y = similarity, fill = concept)) +
+  filter(!is.na(similar_word$term2)) %>%
+  ggplot(aes(x = reorder(similar_word$term2, similarity$similarity), y = similarity$similarity, fill = concept)) +
   geom_col() +
   coord_flip() +
   facet_wrap(~concept, scales = "free_y") +
@@ -392,12 +392,12 @@ similar_to_concepts %>%
 # Define word pairs to compare
 word_pairs <- tribble(
   ~word1, ~word2, ~expected,
-  "democracy", "freedom", "High",
-  "democracy", "autocracy", "Medium",
-  "democracy", "banana", "Low",
-  "government", "regime", "High",
+  "american", "prosperity", "High",
+  "healthcare", "quality", "Medium",
+  "environmental", "tech", "Low",
+  "government", "nations", "High",
   "economy", "healthcare", "Medium",
-  "election", "voting", "High"
+  "digital", "tech", "High"
 )
 
 # Compute similarities
@@ -419,107 +419,21 @@ word_pairs <- word_pairs %>%
 print(word_pairs)
 
 # Visualize
-# word_pairs %>%
-#   filter(!is.na(similarity)) %>%
-#   mutate(pair = paste(word1, "↔", word2)) %>%
-#   ggplot(aes(x = reorder(pair, similarity), y = similarity, fill = expected)) +
-#   geom_col() +
-#   coord_flip() +
-#   scale_fill_manual(values = c("High" = "#27ae60", "Medium" = "#f39c12", "Low" = "#e74c3c")) +
-#   labs(
-#     title = "Semantic Similarity Between Word Pairs",
-#     subtitle = "Word2Vec embeddings capture expected relationships",
-#     x = NULL,
-#     y = "Cosine Similarity",
-#     fill = "Expected\nSimilarity"
-#   )
-```
-
----
-
-# Part 5: Word Analogies
-
-## 5.1 The Analogy Task
-
-One of the most famous properties of embeddings: **vector arithmetic captures semantic relationships**.
-
-**Classic example:** "king" - "man" + "woman" ≈ "queen"
-
-**Political example:** "democracy" - "elections" + "control" ≈ "autocracy"
-
-## 5.2 Performing Analogies
-
-```{r word-analogies}
-# Helper function for analogies
-word_analogy <- function(model, positive, negative, top_n = 5) {
-  # Check if all words are in vocabulary
-  all_words <- c(positive, negative)
-  missing <- all_words[!all_words %in% rownames(embeddings)]
-  
-  if (length(missing) > 0) {
-    cat("Missing words:", paste(missing, collapse = ", "), "\n")
-    return(NULL)
-  }
-  
-  # Compute: positive[1] - negative[1] + positive[2]
-  result_vec <- embeddings[positive[1], ] - embeddings[negative[1], ] + embeddings[positive[2], ]
-  
-  # Find nearest words
-  similarities <- embeddings %*% result_vec / 
-    (sqrt(rowSums(embeddings^2)) * sqrt(sum(result_vec^2)))
-  
-  # Remove input words and get top results
-  similarities <- similarities[!rownames(embeddings) %in% all_words]
-  top_indices <- order(similarities, decreasing = TRUE)[1:top_n]
-  
-  tibble(
-    word = rownames(embeddings)[as.numeric(names(similarities)[top_indices])],
-    similarity = as.numeric(similarities[top_indices])
+word_pairs %>%
+  filter(!is.na(similarity)) %>%
+  mutate(pair = paste(word1, "↔", word2)) %>%
+  ggplot(aes(x = reorder(pair, similarity), y = similarity, fill = expected)) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_manual(values = c("High" = "#27ae60", "Medium" = "#f39c12", "Low" = "#e74c3c")) +
+  labs(
+    title = "Semantic Similarity Between Word Pairs",
+    subtitle = "Word2Vec embeddings capture expected relationships",
+    x = NULL,
+    y = "Cosine Similarity",
+    fill = "Expected\nSimilarity"
   )
-}
-
-# Try political analogies
-cat("democracy - freedom + control = ?\n")
-word_analogy(w2v_model, c("democracy", "control"), c("freedom"), top_n = 5)
-
-cat("\ngovernment - elections + military = ?\n")
-word_analogy(w2v_model, c("government", "military"), c("elections"), top_n = 5)
-
-cat("\neconomic - growth + decline = ?\n")
-word_analogy(w2v_model, c("economic", "decline"), c("growth"), top_n = 5)
 ```
-
-## 5.3 Exploring Political Analogies
-
-```{r political-analogies}
-# Define analogies to test
-analogies <- tribble(
-  ~word1, ~word2, ~word3, ~relation,
-  "democracy", "freedom", "autocracy", "democracy:freedom :: autocracy:?",
-  "president", "executive", "congress", "president:executive :: congress:?",
-  "liberal", "progressive", "conservative", "liberal:progressive :: conservative:?",
-  "economy", "fiscal", "healthcare", "economy:fiscal :: healthcare:?"
-)
-
-# Compute analogies
-analogy_results <- analogies %>%
-  rowwise() %>%
-  mutate(
-    result = {
-      res <- word_analogy(w2v_model, c(word1, word3), c(word2), top_n = 3)
-      if (!is.null(res)) {
-        paste(res$word[1:min(3, nrow(res))], collapse = ", ")
-      } else {
-        "N/A"
-      }
-    }
-  ) %>%
-  ungroup()
-
-print(analogy_results)
-```
-
-**Discussion:** Do these analogies make substantive sense? This is where Rodriguez & Spirling's validation insights matter!
 
 ---
 
@@ -528,6 +442,8 @@ print(analogy_results)
 ## 6.1 Dimensionality Reduction: PCA
 
 We can't visualize 100-dimensional space, so we reduce to 2D using PCA or t-SNE.
+
+Principal Component Analysis (PCA) is a statistical technique used to simplify complex datasets by reducing the number of variables while retaining the most important information. It transforms correlated features into a smaller set of uncorrelated components, making data easier to analyze and visualize.
 
 ```{r pca-visualization}
 # Select interesting political words
@@ -570,6 +486,8 @@ ggplot(pca_data, aes(x = PC1, y = PC2, label = word)) +
 ## 6.2 t-SNE Visualization
 
 t-SNE preserves local structure better than PCA (but is non-linear and slower).
+
+T-SNE, or t-distributed Stochastic Neighbor Embedding, is a technique used for visualizing high-dimensional data by reducing it to two or three dimensions. It works by modeling similar data points as close together in the low-dimensional space while keeping dissimilar points farther apart, making it easier to identify patterns and clusters in complex datasets.
 
 ```{r tsne-visualization}
 library(Rtsne)
@@ -633,7 +551,7 @@ ggplot(tsne_data, aes(x = tsne1, y = tsne2, label = word)) +
 # We'll use glove.6B.100d.txt (100-dimensional, trained on 6B tokens)
 
 # Load GloVe embeddings (if you have them)
-glove_file <- "path/to/glove.6B.100d.txt"
+glove_file <- "wiki_giga_2024_100_MFT20_vectors_seed_2024_alpha_0.75_eta_0.05.050_combined.txt"
 
 if (file.exists(glove_file)) {
   glove <- read.table(
@@ -656,7 +574,7 @@ if (file.exists(glove_file)) {
 
 ```{r compare-embeddings, eval=FALSE}
 # Compare word similarities in both embedding spaces
-test_word <- "democracy"
+test_word <- "economy"
 
 # Custom Word2Vec
 cat("Custom Word2Vec - similar to", test_word, ":\n")
