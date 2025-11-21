@@ -1,0 +1,1137 @@
+---
+title: "Week 3: Text Classification Fundamentals"
+subtitle: "NLP for Political Science - November 2025"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+    theme: flatly
+    highlight: tango
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width = 10,
+  fig.height = 6
+)
+```
+
+# Introduction
+
+Welcome to Week 3! We're moving from representation (Weeks 1-2) to **prediction and classification**.
+
+**Key Question:** Can we automatically categorize political texts? What does classification accuracy tell us about the distinctiveness of political categories?
+
+**This Week's Paper:** Peterson & Spirling (2018) - "Classification Accuracy as a Substantive Quantity of Interest"
+
+## Learning Objectives
+
+By the end of this notebook, you will be able to:
+
+1. Build multi-class text classifiers
+2. Compare bag-of-words vs. embedding-based features
+3. Properly split data into train/test sets
+4. Use cross-validation to evaluate models
+5. Interpret confusion matrices
+6. Analyze classification errors substantively
+7. Report multiple evaluation metrics
+8. Understand when classification accuracy is itself interesting
+
+---
+
+# Setup and Installation
+
+## Required Packages
+
+```{r install-packages, eval=FALSE}
+# Run this once to install new packages
+install.packages(c(
+  # Machine learning
+  "caret",              # ML framework and cross-validation
+  "glmnet",             # Regularized regression (lasso, ridge)
+  
+  # Text classification
+  "quanteda.textmodels", # Text-specific classifiers
+  
+  # Evaluation
+  "yardstick",          # Performance metrics
+  "pROC"               # ROC curves
+  
+  # From previous weeks (should already have)
+  # tidytext, quanteda, word2vec, dplyr, ggplot2
+))
+```
+
+## Load Libraries
+
+```{r load-libraries}
+library(tidytext)
+library(quanteda)
+library(quanteda.textmodels)
+library(word2vec)
+library(caret)
+library(glmnet)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(yardstick)
+
+# Set theme
+theme_set(theme_minimal(base_size = 12))
+
+# Set seed for reproducibility
+set.seed(42)
+```
+
+---
+
+# Part 1: Generate Enhanced Political Corpus
+
+## 1.1 Create Realistic Training Data
+
+We need a corpus with:
+- 300-500 documents
+- 3 clear categories: Foreign Policy, Economic Policy, Social Policy
+- Realistic political language
+- Some overlap between categories (realistic!)
+
+**Note on category names:** We use underscores (`Foreign_Policy`) instead of spaces to ensure they're valid R variable names. This prevents issues with the `caret` package and class probability calculations.
+
+```{r generate-corpus}
+# Helper function to display category names nicely
+display_category <- function(cat_name) {
+  gsub("_", " ", cat_name)
+}
+
+# Enhanced corpus generator with realistic political texts
+generate_political_corpus <- function(n_docs = 450, balance = TRUE) {
+  
+  # Category proportions
+  if (balance) {
+    n_foreign <- n_docs %/% 3
+    n_economic <- n_docs %/% 3
+    n_social <- n_docs - n_foreign - n_economic
+  } else {
+    n_foreign <- round(n_docs * 0.35)
+    n_economic <- round(n_docs * 0.35)
+    n_social <- n_docs - n_foreign - n_economic
+  }
+  
+  # Foreign Policy & Security templates
+  foreign_templates <- c(
+    "Our nation must maintain strong diplomatic relations with allied countries to promote international stability and peace.",
+    "Military readiness is essential for defending our national interests and deterring potential adversaries.",
+    "We need to strengthen international alliances through NATO and other multilateral security partnerships.",
+    "Foreign aid programs advance our strategic interests while supporting democracy and development abroad.",
+    "The threat of terrorism requires enhanced intelligence cooperation and coordinated international responses.",
+    "Trade agreements must balance economic benefits with national security considerations and strategic partnerships.",
+    "Our embassy staff work tirelessly to protect American citizens and promote our values around the world.",
+    "Cyber security threats from hostile nations demand increased investment in digital defense capabilities.",
+    "Regional conflicts require diplomatic solutions backed by credible military deterrence and coalition building.",
+    "Nuclear proliferation remains a critical threat requiring international cooperation and verification protocols.",
+    "Humanitarian interventions must carefully weigh moral imperatives against strategic interests and risks.",
+    "Defense spending ensures our military maintains technological superiority and operational readiness.",
+    "International sanctions can change hostile regimes' behavior when applied multilaterally with allied support.",
+    "Climate change poses security risks through resource scarcity and mass migration that destabilize regions.",
+    "Our intelligence agencies provide vital information to protect the homeland and prevent attacks."
+  )
+  
+  # Economic Policy templates
+  economic_templates <- c(
+    "We must invest in infrastructure to create jobs and strengthen our economic competitiveness.",
+    "Tax reform should ensure fairness while promoting business growth and middle class prosperity.",
+    "Small businesses are the backbone of our economy and deserve support through reduced regulations.",
+    "Trade policy must protect American workers while opening new markets for our products.",
+    "Fiscal responsibility requires balancing government spending with long-term economic sustainability.",
+    "Job training programs help workers adapt to changing economic conditions and new industries.",
+    "Fair wages and labor protections ensure economic security for working families across the nation.",
+    "Investment in research and development drives innovation and maintains our competitive advantage.",
+    "Budget priorities must balance immediate needs with long-term economic growth and stability.",
+    "Energy independence through domestic production strengthens our economy and creates quality jobs.",
+    "Financial regulations protect consumers while maintaining a healthy and competitive banking sector.",
+    "Agricultural subsidies support rural communities and ensure food security for our nation.",
+    "Manufacturing jobs provide good wages and must be protected through smart trade policies.",
+    "Economic inequality threatens social cohesion and requires progressive policy responses.",
+    "Entrepreneurship and innovation flourish when government reduces barriers and bureaucratic red tape."
+  )
+  
+  # Social Policy templates
+  social_templates <- c(
+    "Healthcare access is a fundamental right that must be guaranteed for all citizens.",
+    "Education investment determines our children's futures and our nation's competitiveness.",
+    "Social security provides dignity and security for seniors who built our country.",
+    "Immigration policy should reflect our values of compassion while maintaining border security.",
+    "Civil rights protections ensure equality and justice for all Americans regardless of background.",
+    "Affordable housing programs help families achieve stability and build wealth.",
+    "Mental health services must be expanded to address the growing crisis in our communities.",
+    "Drug addiction requires a public health approach with treatment and prevention programs.",
+    "Child care support enables parents to work while ensuring quality care for children.",
+    "Disability rights and accommodations promote full participation in society and employment.",
+    "Veterans deserve comprehensive healthcare and support services for their sacrifice.",
+    "LGBTQ rights and protections advance equality and prevent discrimination in all settings.",
+    "Criminal justice reform addresses systemic inequities while maintaining public safety.",
+    "Nutrition assistance programs prevent hunger and support healthy child development.",
+    "Environmental justice ensures all communities have clean air, water, and healthy environments."
+  )
+  
+  # Add some overlapping/ambiguous templates (realistic!)
+  overlap_templates <- c(
+    # Economic + Social
+    "Job creation programs provide economic opportunity and lift families out of poverty.",
+    "Education funding is both a social imperative and economic investment in our future.",
+    "Healthcare reform will reduce costs for families while strengthening our economic competitiveness.",
+    
+    # Foreign + Economic
+    "Trade negotiations protect American jobs while opening new markets for our exports.",
+    "Foreign investment creates jobs at home and strengthens international economic partnerships.",
+    "Economic sanctions deter hostile actions while protecting our strategic interests abroad.",
+    
+    # Foreign + Social
+    "Refugee resettlement reflects our humanitarian values while requiring security screening.",
+    "International human rights advocacy advances our values and promotes global stability.",
+    "Global health initiatives prevent disease outbreaks while demonstrating American leadership."
+  )
+  
+  # Generate documents
+  set.seed(123)
+  
+  foreign_docs <- sample(foreign_templates, n_foreign, replace = TRUE)
+  economic_docs <- sample(economic_templates, n_economic, replace = TRUE)
+  social_docs <- sample(social_templates, n_social, replace = TRUE)
+  
+  # Add some overlapping docs to each category
+  n_overlap <- round(n_docs * 0.05)  # 5% overlap
+  foreign_docs <- c(foreign_docs[1:(n_foreign - n_overlap)], 
+                   sample(overlap_templates, n_overlap, replace = TRUE))
+  economic_docs <- c(economic_docs[1:(n_economic - n_overlap)], 
+                    sample(overlap_templates, n_overlap, replace = TRUE))
+  social_docs <- c(social_docs[1:(n_social - n_overlap)], 
+                  sample(overlap_templates, n_overlap, replace = TRUE))
+  
+  # Create data frame
+  corpus <- tibble(
+    doc_id = paste0("doc_", sprintf("%04d", 1:n_docs)),
+    text = c(foreign_docs, economic_docs, social_docs),
+    category = c(
+      rep("Foreign_Policy", n_foreign),
+      rep("Economic_Policy", n_economic),
+      rep("Social_Policy", n_social)
+    ),
+    # Add some metadata
+    year = sample(2020:2024, n_docs, replace = TRUE),
+    speaker = sample(c("Senator", "Representative", "Cabinet", "President"), 
+                    n_docs, replace = TRUE, prob = c(0.4, 0.4, 0.15, 0.05))
+  )
+  
+  # Shuffle rows
+  corpus <- corpus %>% sample_frac(1)
+  
+  return(corpus)
+}
+
+# Generate corpus
+political_corpus <- generate_political_corpus(n_docs = 450, balance = TRUE)
+
+cat("Corpus generated:\n")
+cat("Total documents:", nrow(political_corpus), "\n")
+table(political_corpus$category)
+```
+
+## 1.2 Explore the Data
+
+```{r explore-corpus}
+# Category distribution
+ggplot(political_corpus, aes(x = category, fill = category)) +
+  geom_bar() +
+  scale_fill_manual(values = c("Foreign_Policy" = "#3498db", 
+                                "Economic_Policy" = "#27ae60",
+                                "Social_Policy" = "#e74c3c")) +
+  labs(
+    title = "Document Distribution by Category",
+    x = "Category",
+    y = "Count"
+  ) +
+  theme(legend.position = "none")
+
+# Sample documents from each category
+cat("\n=== Sample Documents ===\n\n")
+for (cat in unique(political_corpus$category)) {
+  cat("Category:", cat, "\n")
+  sample_doc <- political_corpus %>% 
+    filter(category == cat) %>% 
+    slice_sample(n = 1)
+  cat(sample_doc$text, "\n\n")
+}
+```
+
+---
+
+# Part 2: Train/Test Split
+
+## 2.1 Stratified Split
+
+**Key Principle:** Preserve class proportions in train and test sets.
+
+```{r train-test-split}
+# Create stratified train/test split (80/20)
+set.seed(42)
+
+# Get indices for train set (stratified by category)
+train_indices <- createDataPartition(
+  political_corpus$category, 
+  p = 0.8, 
+  list = FALSE
+)
+
+# Split data
+train_data <- political_corpus[train_indices, ]
+test_data <- political_corpus[-train_indices, ]
+
+cat("Training set size:", nrow(train_data), "\n")
+cat("Test set size:", nrow(test_data), "\n\n")
+
+cat("Training set distribution:\n")
+print(table(train_data$category))
+
+cat("\nTest set distribution:\n")
+print(table(test_data$category))
+
+# Verify proportions maintained
+cat("\nProportions (should be similar):\n")
+cat("Train:\n")
+print(prop.table(table(train_data$category)))
+cat("\nTest:\n")
+print(prop.table(table(test_data$category)))
+```
+
+**Why stratified?** Ensures each class is represented proportionally in both train and test sets. Critical for small datasets!
+
+---
+
+# Part 3: Baseline - Bag of Words Classification
+
+## 3.1 Create Document-Term Matrix
+
+```{r bow-dtm}
+# Create corpus objects
+train_corpus <- corpus(train_data, text_field = "text")
+test_corpus <- corpus(test_data, text_field = "text")
+
+# Attach category labels
+docvars(train_corpus, "category") <- train_data$category
+docvars(test_corpus, "category") <- test_data$category
+
+# Create DTM for training data
+train_dtm <- train_corpus %>%
+  tokens(remove_punct = TRUE) %>%
+  tokens_remove(stopwords("en")) %>%
+  dfm()
+
+cat("Training DTM dimensions:", dim(train_dtm), "\n")
+cat("Features (unique words):", nfeat(train_dtm), "\n")
+cat("Sparsity:", sparsity(train_dtm), "\n")
+```
+
+## 3.2 Train Naive Bayes Classifier (BoW Baseline)
+
+```{r bow-classifier}
+# Train Naive Bayes classifier
+nb_model <- textmodel_nb(train_dtm, docvars(train_corpus, "category"))
+
+# Create test DTM (must match training features)
+test_dtm <- test_corpus %>%
+  tokens(remove_punct = TRUE) %>%
+  tokens_remove(stopwords("en")) %>%
+  dfm() %>%
+  dfm_match(featnames(train_dtm))  # Match training features
+
+# Predict on test set
+test_predictions <- predict(nb_model, newdata = test_dtm)
+
+# Evaluate
+confusion_bow <- table(
+  Predicted = test_predictions,
+  Actual = test_data$category
+)
+
+print(confusion_bow)
+
+# Calculate accuracy
+bow_accuracy <- sum(diag(confusion_bow)) / sum(confusion_bow)
+cat("\nBag-of-Words Baseline Accuracy:", round(bow_accuracy * 100, 2), "%\n")
+```
+
+## 3.3 Baseline Comparisons
+
+**Peterson & Spirling principle:** Always compare to baselines!
+
+```{r baselines}
+# Chance baseline
+n_classes <- length(unique(train_data$category))
+chance_baseline <- 1 / n_classes
+
+# Frequency baseline (predict most common class)
+most_common_class <- names(sort(table(train_data$category), decreasing = TRUE))[1]
+freq_baseline <- max(table(train_data$category)) / nrow(train_data)
+
+cat("Baseline Comparisons:\n")
+cat("=====================\n")
+cat("Chance baseline (random guessing):", round(chance_baseline * 100, 2), "%\n")
+cat("Frequency baseline (predict most common):", round(freq_baseline * 100, 2), "%\n")
+cat("Our BoW classifier:", round(bow_accuracy * 100, 2), "%\n\n")
+cat("Improvement over chance:", round((bow_accuracy - chance_baseline) * 100, 2), "percentage points\n")
+cat("Improvement over frequency:", round((bow_accuracy - freq_baseline) * 100, 2), "percentage points\n")
+```
+
+---
+
+# Part 4: Word2Vec Embeddings Classification
+
+## 4.1 Train or Load Word2Vec Model
+
+```{r word2vec-model}
+# Prepare text for Word2Vec
+clean_text <- function(text) {
+  text %>%
+    tolower() %>%
+    gsub("[[:punct:]]", " ", .) %>%
+    gsub("\\s+", " ", .) %>%
+    trimws()
+}
+
+corpus_clean <- clean_text(train_data$text)
+
+# Write to temp file
+temp_file <- tempfile(fileext = ".txt")
+writeLines(corpus_clean, temp_file)
+
+# Train Word2Vec (or load from Week 2 if available)
+w2v_model <- word2vec(
+  x = temp_file,
+  type = "skip-gram",
+  dim = 100,
+  window = 5,
+  iter = 20,
+  min_count = 2,
+  threads = 4
+)
+
+cat("Word2Vec model trained\n")
+cat("Vocabulary size:", length(w2v_model), "words\n")
+
+# Get embedding matrix
+embeddings <- as.matrix(w2v_model)
+```
+
+## 4.2 Create Document Embeddings
+
+```{r doc-embeddings}
+# Function to get document embedding (average word vectors)
+get_doc_embedding <- function(text, word_embeddings) {
+  # Tokenize and clean
+  words <- text %>%
+    tolower() %>%
+    strsplit("\\s+") %>%
+    unlist()
+  
+  # Remove stopwords
+  words <- words[!words %in% stopwords("en")]
+  
+  # Get vectors for words in vocabulary
+  words_in_vocab <- words[words %in% rownames(word_embeddings)]
+  
+  if (length(words_in_vocab) == 0) {
+    return(rep(0, ncol(word_embeddings)))
+  }
+  
+  # Average word vectors
+  word_vecs <- word_embeddings[words_in_vocab, , drop = FALSE]
+  colMeans(word_vecs)
+}
+
+# Create document embeddings for train and test
+train_embeddings <- t(sapply(train_data$text, function(text) {
+  get_doc_embedding(text, embeddings)
+}))
+
+test_embeddings <- t(sapply(test_data$text, function(text) {
+  get_doc_embedding(text, embeddings)
+}))
+
+cat("Training embeddings:", dim(train_embeddings), "\n")
+cat("Test embeddings:", dim(test_embeddings), "\n")
+```
+
+## 4.3 Train Classifier with Embeddings
+
+```{r embedding-classifier}
+# Prepare data for caret
+train_df <- data.frame(train_embeddings)
+train_df$category <- as.factor(train_data$category)
+
+test_df <- data.frame(test_embeddings)
+
+# Train multinomial logistic regression
+set.seed(42)
+emb_model <- train(
+  category ~ .,
+  data = train_df,
+  method = "multinom",
+  trace = FALSE
+)
+
+# Predict on test set
+emb_predictions <- predict(emb_model, newdata = test_df)
+
+# Evaluate
+confusion_emb <- table(
+  Predicted = emb_predictions,
+  Actual = test_data$category
+)
+
+print(confusion_emb)
+
+# Calculate accuracy
+emb_accuracy <- sum(diag(confusion_emb)) / sum(confusion_emb)
+cat("\nWord2Vec Embeddings Accuracy:", round(emb_accuracy * 100, 2), "%\n")
+```
+
+---
+
+# Part 5: Cross-Validation
+
+## 5.1 K-Fold Cross-Validation on Training Set
+
+```{r cross-validation}
+# Set up 5-fold cross-validation
+train_control <- trainControl(
+  method = "cv",
+  number = 5,
+  savePredictions = "final",
+  classProbs = TRUE
+)
+
+# Cross-validate BoW approach (using glmnet for speed)
+set.seed(42)
+
+# Convert DTM to matrix for caret
+train_matrix <- as.matrix(train_dtm)
+train_matrix_df <- data.frame(train_matrix)
+train_matrix_df$category <- as.factor(train_data$category)
+
+# Train with CV
+bow_cv_model <- train(
+  category ~ .,
+  data = train_matrix_df,
+  method = "glmnet",
+  trControl = train_control,
+  family = "multinomial"
+)
+
+cat("BoW Cross-Validation Results:\n")
+print(bow_cv_model$results[, c("alpha", "lambda", "Accuracy", "Kappa")])
+
+cat("\nBest BoW CV Accuracy:", round(max(bow_cv_model$results$Accuracy) * 100, 2), "%\n")
+
+# Cross-validate embedding approach
+set.seed(42)
+emb_cv_model <- train(
+  category ~ .,
+  data = train_df,
+  method = "multinom",
+  trControl = train_control,
+  trace = FALSE
+)
+
+cat("\nEmbedding Cross-Validation Results:\n")
+print(emb_cv_model$results[, c("decay", "Accuracy", "Kappa")])
+
+cat("\nBest Embedding CV Accuracy:", round(max(emb_cv_model$results$Accuracy) * 100, 2), "%\n")
+```
+
+---
+
+# Part 6: Comprehensive Evaluation Metrics
+
+## 6.1 Multiple Metrics for Both Models
+
+```{r metrics}
+# Function to calculate all metrics
+calculate_metrics <- function(confusion_matrix, model_name) {
+  # Convert to data frame format for yardstick
+  conf_df <- as.data.frame(as.table(confusion_matrix))
+  names(conf_df) <- c("Predicted", "Actual", "Freq")
+  
+  # Expand to one row per observation
+  results <- conf_df %>%
+    slice(rep(1:n(), times = Freq)) %>%
+    select(-Freq)
+  
+  results$Predicted <- as.factor(results$Predicted)
+  results$Actual <- as.factor(results$Actual)
+  
+  # Calculate metrics
+  accuracy_val <- accuracy_vec(results$Actual, results$Predicted)
+  
+  # Per-class metrics
+  precision_vals <- precision_vec(results$Actual, results$Predicted, 
+                                  estimator = "macro")
+  recall_vals <- recall_vec(results$Actual, results$Predicted, 
+                            estimator = "macro")
+  f1_val <- f_meas_vec(results$Actual, results$Predicted, 
+                       estimator = "macro")
+  
+  tibble(
+    Model = model_name,
+    Accuracy = accuracy_val,
+    Precision = precision_vals,
+    Recall = recall_vals,
+    F1 = f1_val
+  )
+}
+
+# Calculate for both models
+metrics_bow <- calculate_metrics(confusion_bow, "Bag of Words")
+metrics_emb <- calculate_metrics(confusion_emb, "Word2Vec Embeddings")
+
+# Combine and display
+all_metrics <- bind_rows(metrics_bow, metrics_emb)
+print(all_metrics)
+
+# Visualize
+all_metrics %>%
+  pivot_longer(cols = c(Accuracy, Precision, Recall, F1),
+               names_to = "Metric",
+               values_to = "Value") %>%
+  ggplot(aes(x = Metric, y = Value, fill = Model)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("Bag of Words" = "#3498db", 
+                                "Word2Vec Embeddings" = "#27ae60")) +
+  scale_y_continuous(labels = scales::percent, limits = c(0, 1)) +
+  labs(
+    title = "Classification Performance Comparison",
+    subtitle = "Multiple evaluation metrics",
+    x = NULL,
+    y = "Score"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+## 6.2 Per-Category Performance
+
+```{r per-category-metrics}
+# Function to calculate per-category metrics
+per_category_metrics <- function(confusion_matrix, categories) {
+  metrics_list <- list()
+  
+  for (i in 1:length(categories)) {
+    cat <- categories[i]
+    tp <- confusion_matrix[i, i]
+    fp <- sum(confusion_matrix[i, ]) - tp
+    fn <- sum(confusion_matrix[, i]) - tp
+    tn <- sum(confusion_matrix) - tp - fp - fn
+    
+    precision <- tp / (tp + fp)
+    recall <- tp / (tp + fn)
+    f1 <- 2 * (precision * recall) / (precision + recall)
+    
+    metrics_list[[cat]] <- tibble(
+      Category = cat,
+      Precision = precision,
+      Recall = recall,
+      F1 = f1
+    )
+  }
+  
+  bind_rows(metrics_list)
+}
+
+# Calculate for BoW
+categories <- rownames(confusion_bow)
+bow_per_cat <- per_category_metrics(confusion_bow, categories)
+bow_per_cat$Model <- "BoW"
+
+# Calculate for embeddings
+emb_per_cat <- per_category_metrics(confusion_emb, categories)
+emb_per_cat$Model <- "Embeddings"
+
+# Combine
+all_per_cat <- bind_rows(bow_per_cat, emb_per_cat)
+
+print(all_per_cat)
+
+# Visualize F1 scores by category
+ggplot(all_per_cat, aes(x = Category, y = F1, fill = Model)) +
+  geom_col(position = "dodge") +
+  scale_fill_manual(values = c("BoW" = "#3498db", "Embeddings" = "#27ae60")) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "F1 Score by Category",
+    subtitle = "Which categories are easier/harder to classify?",
+    x = NULL,
+    y = "F1 Score"
+  ) +
+  theme(legend.position = "bottom")
+```
+
+---
+
+# Part 7: Confusion Matrix Analysis
+
+## 7.1 Visualize Confusion Matrices
+
+```{r confusion-viz}
+# Function to plot confusion matrix
+plot_confusion_matrix <- function(conf_matrix, title) {
+  # Convert to data frame
+  conf_df <- as.data.frame(as.table(conf_matrix))
+  names(conf_df) <- c("Predicted", "Actual", "Freq")
+  
+  ggplot(conf_df, aes(x = Actual, y = Predicted, fill = Freq)) +
+    geom_tile(color = "white") +
+    geom_text(aes(label = Freq), size = 6, color = "white") +
+    scale_fill_gradient(low = "#ecf0f1", high = "#e74c3c") +
+    labs(
+      title = title,
+      x = "Actual Category",
+      y = "Predicted Category"
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid = element_blank()
+    )
+}
+
+# Plot both confusion matrices
+plot_confusion_matrix(confusion_bow, "Bag of Words Confusion Matrix")
+plot_confusion_matrix(confusion_emb, "Word2Vec Embeddings Confusion Matrix")
+```
+
+## 7.2 Interpret Confusion Patterns
+
+```{r confusion-interpretation}
+# Calculate confusion percentages
+confusion_bow_pct <- prop.table(confusion_bow, margin = 2) * 100
+confusion_emb_pct <- prop.table(confusion_emb, margin = 2) * 100
+
+cat("Bag of Words - Confusion Percentages (by actual category):\n")
+print(round(confusion_bow_pct, 1))
+
+cat("\nWord2Vec Embeddings - Confusion Percentages (by actual category):\n")
+print(round(confusion_emb_pct, 1))
+
+# Identify most confused pairs
+get_top_confusions <- function(conf_matrix, name) {
+  # Get off-diagonal elements
+  confusions <- list()
+  n <- nrow(conf_matrix)
+  
+  for (i in 1:n) {
+    for (j in 1:n) {
+      if (i != j && conf_matrix[i, j] > 0) {
+        confusions[[length(confusions) + 1]] <- tibble(
+          Actual = colnames(conf_matrix)[j],
+          Predicted = rownames(conf_matrix)[i],
+          Count = conf_matrix[i, j],
+          Model = name
+        )
+      }
+    }
+  }
+  
+  bind_rows(confusions) %>%
+    arrange(desc(Count))
+}
+
+bow_confusions <- get_top_confusions(confusion_bow, "BoW")
+emb_confusions <- get_top_confusions(confusion_emb, "Embeddings")
+
+cat("\nMost Common Confusions (BoW):\n")
+print(head(bow_confusions, 5))
+
+cat("\nMost Common Confusions (Embeddings):\n")
+print(head(emb_confusions, 5))
+```
+
+---
+
+# Part 8: Error Analysis
+
+## 8.1 Examine Misclassified Documents
+
+**Peterson & Spirling insight:** Error analysis is substantively meaningful!
+
+```{r error-analysis}
+# Get misclassified documents (BoW)
+test_data$bow_predicted <- test_predictions
+test_data$bow_correct <- (test_data$category == test_data$bow_predicted)
+
+# Get misclassified documents (Embeddings)
+test_data$emb_predicted <- emb_predictions
+test_data$emb_correct <- (test_data$category == test_data$emb_predicted)
+
+# Documents both models got wrong
+both_wrong <- test_data %>%
+  filter(!bow_correct & !emb_correct)
+
+cat("Documents misclassified by both models:", nrow(both_wrong), "\n\n")
+
+# Sample misclassified documents
+if (nrow(both_wrong) > 0) {
+  cat("=== Sample Misclassifications (Both Models Wrong) ===\n\n")
+  
+  sample_errors <- both_wrong %>% 
+    slice_sample(n = min(5, nrow(both_wrong)))
+  
+  for (i in 1:nrow(sample_errors)) {
+    cat("Document", i, "\n")
+    cat("Actual:", sample_errors$category[i], "\n")
+    cat("BoW Predicted:", sample_errors$bow_predicted[i], "\n")
+    cat("Emb Predicted:", sample_errors$emb_predicted[i], "\n")
+    cat("Text:", sample_errors$text[i], "\n\n")
+  }
+}
+
+# Documents only one model got wrong
+bow_only_wrong <- test_data %>%
+  filter(!bow_correct & emb_correct)
+
+emb_only_wrong <- test_data %>%
+  filter(bow_correct & !emb_correct)
+
+cat("Documents BoW got wrong but Embeddings got right:", nrow(bow_only_wrong), "\n")
+cat("Documents Embeddings got wrong but BoW got right:", nrow(emb_only_wrong), "\n\n")
+
+# Analyze where each model excels
+if (nrow(bow_only_wrong) > 0) {
+  cat("=== Where Embeddings Excel (BoW failed, Embeddings succeeded) ===\n\n")
+  sample_emb_better <- bow_only_wrong %>% slice_sample(n = min(3, nrow(bow_only_wrong)))
+  for (i in 1:nrow(sample_emb_better)) {
+    cat("Actual:", sample_emb_better$category[i], "\n")
+    cat("Text:", sample_emb_better$text[i], "\n\n")
+  }
+}
+```
+
+## 8.2 Substantive Interpretation of Errors
+
+```{r error-interpretation}
+# Which categories are most confused?
+confusion_summary <- tibble(
+  Category_Pair = c("Economic → Social", "Social → Economic", 
+                   "Foreign → Economic", "Economic → Foreign",
+                   "Foreign → Social", "Social → Foreign"),
+  BoW_Count = c(
+    confusion_bow["Social_Policy", "Economic_Policy"],
+    confusion_bow["Economic_Policy", "Social_Policy"],
+    confusion_bow["Economic_Policy", "Foreign_Policy"],
+    confusion_bow["Foreign_Policy", "Economic_Policy"],
+    confusion_bow["Social_Policy", "Foreign_Policy"],
+    confusion_bow["Foreign_Policy", "Social_Policy"]
+  ),
+  Emb_Count = c(
+    confusion_emb["Social_Policy", "Economic_Policy"],
+    confusion_emb["Economic_Policy", "Social_Policy"],
+    confusion_emb["Economic_Policy", "Foreign_Policy"],
+    confusion_emb["Foreign_Policy", "Economic_Policy"],
+    confusion_emb["Social_Policy", "Foreign_Policy"],
+    confusion_emb["Foreign_Policy", "Social_Policy"]
+  )
+) %>%
+  mutate(Total_Confusions = BoW_Count + Emb_Count) %>%
+  arrange(desc(Total_Confusions))
+
+print(confusion_summary)
+
+# Visualize
+ggplot(confusion_summary, aes(x = reorder(Category_Pair, Total_Confusions), 
+                               y = Total_Confusions)) +
+  geom_col(fill = "#e74c3c") +
+  coord_flip() +
+  labs(
+    title = "Most Common Category Confusions",
+    subtitle = "Across both models",
+    x = NULL,
+    y = "Total Confusions"
+  )
+```
+
+**Substantive Insight:** Economic and Social policies get confused most often. Why? They often discuss overlapping topics like jobs, families, and opportunity!
+
+---
+
+# Part 9: Feature Importance
+
+## 9.1 Most Important Words for BoW Model
+
+```{r feature-importance}
+# Get coefficients from Naive Bayes model
+# (For demonstration, we'll look at word frequencies by category)
+
+# Top words per category
+train_tokens <- train_data %>%
+  unnest_tokens(word, text) %>%
+  anti_join(stop_words, by = "word") %>%
+  filter(nchar(word) > 2)
+
+top_words_by_category <- train_tokens %>%
+  count(category, word) %>%
+  group_by(category) %>%
+  slice_max(n, n = 10) %>%
+  ungroup()
+
+# Visualize
+ggplot(top_words_by_category, aes(x = reorder_within(word, n, category), 
+                                   y = n, fill = category)) +
+  geom_col(show.legend = FALSE) +
+  scale_x_reordered() +
+  scale_fill_manual(values = c("Foreign_Policy" = "#3498db", 
+                                "Economic_Policy" = "#27ae60",
+                                "Social_Policy" = "#e74c3c")) +
+  facet_wrap(~category, scales = "free_y") +
+  coord_flip() +
+  labs(
+    title = "Top Words by Category",
+    subtitle = "Most discriminative features for BoW model",
+    x = NULL,
+    y = "Frequency in Training Set"
+  )
+```
+
+## 9.2 Distinctive Words (TF-IDF)
+
+```{r tfidf-features}
+# Calculate TF-IDF by category
+category_tfidf <- train_tokens %>%
+  count(category, word) %>%
+  bind_tf_idf(word, category, n) %>%
+  group_by(category) %>%
+  slice_max(tf_idf, n = 8) %>%
+  ungroup()
+
+# Visualize
+ggplot(category_tfidf, aes(x = reorder_within(word, tf_idf, category), 
+                           y = tf_idf, fill = category)) +
+  geom_col(show.legend = FALSE) +
+  scale_x_reordered() +
+  scale_fill_manual(values = c("Foreign_Policy" = "#3498db", 
+                                "Economic_Policy" = "#27ae60",
+                                "Social_Policy" = "#e74c3c")) +
+  facet_wrap(~category, scales = "free_y") +
+  coord_flip() +
+  labs(
+    title = "Most Distinctive Words by Category (TF-IDF)",
+    subtitle = "Words unique to each category",
+    x = NULL,
+    y = "TF-IDF Score"
+  )
+```
+
+---
+
+# Part 10: Connecting to Peterson & Spirling (2018)
+
+## 10.1 What Does Our Accuracy Tell Us?
+
+```{r peterson-spirling-interpretation}
+# Summary of findings
+cat("=== Classification Results Summary ===\n\n")
+
+cat("Baselines:\n")
+cat("  Chance:", round(chance_baseline * 100, 1), "%\n")
+cat("  Frequency:", round(freq_baseline * 100, 1), "%\n\n")
+
+cat("Model Performance:\n")
+cat("  Bag of Words:", round(bow_accuracy * 100, 1), "%\n")
+cat("  Word2Vec Embeddings:", round(emb_accuracy * 100, 1), "%\n\n")
+
+cat("Improvement over chance:\n")
+cat("  BoW:", round((bow_accuracy - chance_baseline) * 100, 1), "percentage points\n")
+cat("  Embeddings:", round((emb_accuracy - chance_baseline) * 100, 1), "percentage points\n\n")
+```
+
+## 10.2 Peterson & Spirling Insights
+
+**What does our accuracy level tell us?**
+
+```{r ps-insights}
+cat("=== Substantive Interpretation (Peterson & Spirling Framework) ===\n\n")
+
+cat("1. CATEGORY DISTINCTIVENESS\n")
+cat("   Our", round(bow_accuracy * 100, 1), "% accuracy suggests Foreign/Economic/Social\n")
+cat("   policy domains have moderately distinct vocabularies.\n\n")
+
+cat("2. WHERE CATEGORIES OVERLAP\n")
+cat("   Most confusions: Economic ↔ Social\n")
+cat("   Insight: These domains share vocabulary around 'jobs', 'families', 'opportunity'\n\n")
+
+cat("3. EMBEDDINGS vs. BOW\n")
+if (emb_accuracy > bow_accuracy) {
+  cat("   Embeddings outperform BoW by", round((emb_accuracy - bow_accuracy) * 100, 1), "points\n")
+  cat("   Insight: Semantic similarity helps when documents use varied vocabulary\n\n")
+} else if (bow_accuracy > emb_accuracy) {
+  cat("   BoW outperforms embeddings by", round((bow_accuracy - emb_accuracy) * 100, 1), "points\n")
+  cat("   Insight: Keywords matter more than semantic similarity for these categories\n\n")
+} else {
+  cat("   Methods perform similarly\n")
+  cat("   Insight: Simple and complex features capture same patterns\n\n")
+}
+
+cat("4. IMPLICATIONS FOR RESEARCH\n")
+cat("   - Categories are linguistically coherent but not fully distinct\n")
+cat("   - Some policy areas naturally overlap in discourse\n")
+cat("   - Could track changes in distinctiveness over time\n")
+cat("   - Classification accuracy itself is a measurement of conceptual boundaries\n")
+```
+
+---
+
+# Part 11: Your Turn - Practical Exercises
+
+## Exercise 1: Build Classifier on Your Own Data
+
+```{r exercise-1, eval=FALSE}
+# Load your dissertation corpus
+# my_data <- read_csv("data/my_corpus.csv")
+
+# Requirements:
+# - Minimum 200 documents
+# - 3+ categories
+# - Clear category labels
+
+# IMPORTANT: Category names must be valid R variable names
+# Use underscores instead of spaces: "Economic_Policy" not "Economic Policy"
+# If you have spaces, convert them:
+# my_data$category <- gsub(" ", "_", my_data$category)
+
+# Steps:
+# 1. Create stratified train/test split
+# 2. Build BoW classifier
+# 3. Build embedding classifier
+# 4. Compare performance
+# 5. Analyze confusion matrices
+# 6. Examine errors
+
+# Your code here:
+
+```
+
+## Exercise 2: Cross-Validation Comparison
+
+```{r exercise-2, eval=FALSE}
+# Compare multiple methods with cross-validation:
+# 1. BoW + Naive Bayes
+# 2. BoW + Logistic Regression
+# 3. Embeddings + Logistic Regression
+# 4. (Advanced) Regularized regression (lasso/ridge)
+
+# Report:
+# - Mean CV accuracy for each
+# - Standard deviation
+# - Which method is most stable?
+
+# Your code here:
+
+```
+
+## Exercise 3: Error Analysis
+
+```{r exercise-3, eval=FALSE}
+# Examine misclassified documents:
+# 1. Find documents both models got wrong
+# 2. Find documents only one model got wrong
+# 3. Read 10+ misclassified documents
+# 4. Identify patterns:
+#    - Are they genuinely ambiguous?
+#    - Do they bridge categories?
+#    - Are categories poorly defined?
+
+# Write up findings in your report
+
+# Your code here:
+
+```
+
+## Exercise 4: Temporal Analysis (Advanced)
+
+```{r exercise-4, eval=FALSE}
+# If your data has time stamps:
+# 1. Train classifiers on early period
+# 2. Test on later period
+# 3. Has category distinctiveness changed?
+# 4. What does accuracy trend tell you?
+
+# This is Peterson & Spirling's key application!
+
+# Your code here:
+
+```
+
+---
+
+# Week 3 Deliverables Checklist
+
+For your assignment, complete the following:
+
+- [ ] **Build Classifiers**
+  - 3-class classifier on your data (200+ docs)
+  - Note: Use underscores in category names (e.g., `Economic_Policy`) to avoid R variable name issues
+  - Bag-of-words baseline
+  - Word2Vec embeddings classifier
+  - Proper train/test split (stratified)
+
+- [ ] **Evaluation**
+  - 5-fold cross-validation on both methods
+  - Multiple metrics (accuracy, precision, recall, F1)
+  - Comparison to baselines (chance, frequency)
+  - Statistical significance testing
+
+- [ ] **Confusion Matrix Analysis**
+  - Visualize confusion matrices
+  - Identify most confused categories
+  - Interpret confusion patterns
+
+- [ ] **Error Analysis**
+  - Examine 10+ misclassified documents
+  - Identify patterns in errors
+  - Where does each method excel/fail?
+
+- [ ] **Feature Importance**
+  - Top words by category
+  - TF-IDF distinctive terms
+  - Interpret what classifier learned
+
+- [ ] **Written Report (2 pages)**
+  - Which method performs best and why?
+  - What does accuracy level tell you about categories?
+  - How do categories differ linguistically?
+  - Where do they overlap?
+  - Connection to Peterson & Spirling insights
+  - Limitations and future directions
+
+---
+
+# Summary
+
+This week, we learned:
+
+✅ **Multi-class text classification** - predicting categories  
+✅ **Proper evaluation** - train/test splits, cross-validation  
+✅ **Multiple metrics** - beyond accuracy  
+✅ **Confusion matrices** - understanding errors  
+✅ **Error analysis** - substantive interpretation  
+✅ **BoW vs. embeddings** - comparing representations  
+✅ **Peterson & Spirling** - accuracy as measurement  
+
+**Next Week Preview:** We'll add contextual embeddings (BERT) and see how context-dependent representations improve classification!
+
+**Remember Peterson & Spirling's key message:** Classification accuracy isn't just a technical metric—it measures the linguistic distinctiveness of your categories, which is itself substantively interesting!
+
+

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classification Accuracy: Peterson & Spirling (2018)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reset.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/theme/serif.css">
+    <style>
+        .reveal h1, .reveal h2, .reveal h3 {
+            text-transform: none;
+        }
+        .reveal h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+        }
+        .reveal h2 {
+            font-size: 1.8em;
+            color: #34495e;
+        }
+        .reveal h3 {
+            font-size: 1.4em;
+            color: #7f8c8d;
+        }
+        .reveal {
+            font-size: 32px;
+        }
+        .reveal ul, .reveal ol {
+            margin-top: 0.5em;
+        }
+        .reveal li {
+            margin-bottom: 0.5em;
+        }
+        .principle-box {
+            background-color: #ecf0f1;
+            border-left: 5px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .warning-box {
+            background-color: #fff5e6;
+            border-left: 5px solid #e74c3c;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .method-box {
+            background-color: #e8f5e9;
+            border-left: 5px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .quote {
+            font-style: italic;
+            color: #555;
+            border-left: 3px solid #ccc;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+        .small-text {
+            font-size: 0.7em;
+        }
+        .citation {
+            font-size: 0.6em;
+            color: #7f8c8d;
+            margin-top: 2em;
+        }
+        .columns {
+            display: flex;
+            gap: 2em;
+        }
+        .column {
+            flex: 1;
+        }
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .fragment.current-visible.visible:not(.current-fragment) {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <!-- Title Slide -->
+            <section>
+                <h1>Classification Accuracy as a Substantive Quantity of Interest</h1>
+                <h3>Measuring Polarization in Westminster Systems</h3>
+                <p style="margin-top: 2em;">
+                    <strong>Andrew Peterson & Arthur Spirling</strong><br>
+                    <em>Political Analysis</em>, 2018
+                </p>
+                <p style="margin-top: 2em; font-size: 0.8em;">
+                    Week 3: NLP for Political Science<br>
+                    November 2025
+                </p>
+            </section>
+
+            <!-- Why This Paper Matters -->
+            <section>
+                <h2>Why This Paper Matters</h2>
+                <ul>
+                    <li class="fragment">Reframes classification from <span class="highlight">means</span> to <span class="highlight">ends</span></li>
+                    <li class="fragment">Accuracy isn't just validation—it's your finding!</li>
+                    <li class="fragment">Opens new research questions</li>
+                    <li class="fragment">Changes how we think about text classification</li>
+                </ul>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    "The accuracy of a classifier can itself be a quantity of substantive interest."
+                </p>
+            </section>
+
+            <!-- Traditional View -->
+            <section>
+                <h2>The Traditional View of Classification</h2>
+                <div class="columns">
+                    <div class="column">
+                        <h3>Standard Approach</h3>
+                        <ul class="small-text">
+                            <li>Classification = tool for prediction</li>
+                            <li>Accuracy = measure of success</li>
+                            <li>Goal: maximize accuracy</li>
+                            <li>Focus: predict new documents</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>Example Use</h3>
+                        <ul class="small-text">
+                            <li>Train classifier on labeled data</li>
+                            <li>Apply to unlabeled documents</li>
+                            <li>Use predictions for analysis</li>
+                            <li>Accuracy = quality check</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    Classification accuracy is a <strong>means to an end</strong>
+                </p>
+            </section>
+
+            <!-- Peterson & Spirling View -->
+            <section>
+                <h2>Peterson & Spirling's Innovation</h2>
+                <div class="principle-box" style="font-size: 1.1em;">
+                    <p><strong>Classification accuracy can be the research finding itself!</strong></p>
+                </div>
+                <div class="fragment" style="margin-top: 1em;">
+                    <p><strong>Key Insight:</strong></p>
+                    <ul>
+                        <li>High accuracy = <span class="highlight">distinct</span> language patterns</li>
+                        <li>Low accuracy = <span class="highlight">similar/overlapping</span> language</li>
+                        <li>Tracking accuracy over time = measuring change</li>
+                        <li>Comparing accuracy across contexts = comparative analysis</li>
+                    </ul>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    Accuracy becomes a <strong>measurement tool</strong> for substantive questions
+                </p>
+            </section>
+
+            <!-- The Polarization Example -->
+            <section>
+                <h2>Classic Example: Party Polarization</h2>
+                <div class="method-box small-text">
+                    <p><strong>Research Question:</strong> How polarized is the legislature?</p>
+                    <p class="fragment" style="margin-top: 1em;"><strong>Traditional Approach:</strong></p>
+                    <ul class="fragment">
+                        <li>Vote-based measures (DW-NOMINATE)</li>
+                        <li>Policy position surveys</li>
+                        <li>Legislative behavior metrics</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 1em;"><strong>Peterson & Spirling Approach:</strong></p>
+                    <ul class="fragment">
+                        <li>Can you predict party from speech text?</li>
+                        <li>95% accuracy = <span class="highlight">highly distinct</span> party languages</li>
+                        <li>55% accuracy = <span class="highlight">similar</span> party languages</li>
+                        <li>Track accuracy over time = <span class="highlight">polarization trend</span></li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Accuracy as Measurement -->
+            <section>
+                <h2>Accuracy as a Measurement Scale</h2>
+                <div style="text-align: center; margin: 2em 0;">
+                    <div style="background: linear-gradient(to right, #27ae60, #f39c12, #e74c3c); height: 60px; border-radius: 5px; position: relative;">
+                        <div class="fragment" style="position: absolute; left: 5%; top: -30px; font-size: 0.8em;">
+                            <p>33%</p>
+                            <p style="font-size: 0.7em;">Chance<br>(3-class)</p>
+                        </div>
+                        <div class="fragment" style="position: absolute; left: 50%; top: -30px; font-size: 0.8em; transform: translateX(-50%);">
+                            <p>65%</p>
+                            <p style="font-size: 0.7em;">Moderate<br>Distinction</p>
+                        </div>
+                        <div class="fragment" style="position: absolute; right: 5%; top: -30px; font-size: 0.8em;">
+                            <p>90%+</p>
+                            <p style="font-size: 0.7em;">Highly<br>Distinct</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="fragment" style="margin-top: 3em;">
+                    <p><strong>Interpretation:</strong></p>
+                    <ul class="small-text">
+                        <li>Low accuracy = categories use similar language</li>
+                        <li>High accuracy = categories have distinctive vocabularies</li>
+                        <li>Changes over time = linguistic convergence or divergence</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Why This Matters for Political Science -->
+            <section>
+                <h2>Why This Matters for Political Science</h2>
+                <div class="columns small-text">
+                    <div class="column">
+                        <h3>Research Questions</h3>
+                        <ul>
+                            <li class="fragment">How polarized are parties?</li>
+                            <li class="fragment">Do committees have distinct languages?</li>
+                            <li class="fragment">How similar are policy debates across countries?</li>
+                            <li class="fragment">When did parties diverge linguistically?</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <h3>Applications</h3>
+                        <ul>
+                            <li class="fragment">Measuring polarization trends</li>
+                            <li class="fragment">Comparing institutions</li>
+                            <li class="fragment">Cross-national comparison</li>
+                            <li class="fragment">Historical analysis</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    Classification accuracy becomes a <span class="highlight">dependent variable</span>
+                </p>
+            </section>
+
+            <!-- The Baseline Problem -->
+            <section>
+                <h2>Critical Issue: The Baseline Problem</h2>
+                <div class="warning-box">
+                    <p><strong>You can't interpret accuracy in isolation!</strong></p>
+                    <p class="fragment" style="margin-top: 1em;">Is 70% accuracy good?</p>
+                    <ul class="fragment small-text">
+                        <li>Compared to 33% chance? → Yes, impressive!</li>
+                        <li>Compared to 95% with simple features? → No, terrible!</li>
+                        <li>Compared to human performance of 60%? → Yes, strong!</li>
+                    </ul>
+                </div>
+                <div class="fragment" style="margin-top: 1em;">
+                    <p><strong>Required Baselines:</strong></p>
+                    <ol class="small-text">
+                        <li><strong>Chance baseline:</strong> Random guessing (33% for 3-class)</li>
+                        <li><strong>Frequency baseline:</strong> Always predict most common class</li>
+                        <li><strong>Simple feature baseline:</strong> Unigrams only</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Baseline Examples -->
+            <section>
+                <h2>Baseline Calculation Examples</h2>
+                <div class="method-box small-text">
+                    <p><strong>Example corpus: 300 documents, 3 classes</strong></p>
+                    <table style="font-size: 0.9em; margin-top: 1em;">
+                        <thead>
+                            <tr style="background: #3498db; color: white;">
+                                <th>Category</th>
+                                <th>Count</th>
+                                <th>Proportion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="fragment">
+                                <td>Foreign Policy</td>
+                                <td>120</td>
+                                <td>40%</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td>Economic Policy</td>
+                                <td>100</td>
+                                <td>33%</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td>Social Policy</td>
+                                <td>80</td>
+                                <td>27%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p><strong>Baselines:</strong></p>
+                        <ul>
+                            <li><strong>Chance:</strong> 33.3% (random guessing)</li>
+                            <li><strong>Frequency:</strong> 40% (always predict "Foreign Policy")</li>
+                            <li><strong>Your classifier:</strong> 75% ← This is what you compare!</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cross-Validation -->
+            <section>
+                <h2>Proper Evaluation: Cross-Validation</h2>
+                <div class="principle-box">
+                    <p><strong>Why cross-validation?</strong></p>
+                    <ul class="small-text">
+                        <li class="fragment">Single train/test split can be misleading</li>
+                        <li class="fragment">Need stable estimate of performance</li>
+                        <li class="fragment">Detect overfitting</li>
+                        <li class="fragment">Get confidence intervals</li>
+                    </ul>
+                </div>
+                <div class="fragment" style="margin-top: 1em;">
+                    <p><strong>K-Fold Cross-Validation (typically K=5 or 10):</strong></p>
+                    <ol class="small-text">
+                        <li>Split data into K equal parts</li>
+                        <li>Train on K-1 parts, test on remaining part</li>
+                        <li>Repeat K times, rotating test set</li>
+                        <li>Average accuracy across all folds</li>
+                        <li>Report mean and standard deviation</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Statistical Significance -->
+            <section>
+                <h2>Statistical Significance Matters</h2>
+                <div class="method-box small-text">
+                    <p><strong>Question: Is 75% accuracy significantly better than 70%?</strong></p>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p><strong>Need to consider:</strong></p>
+                        <ul>
+                            <li>Sample size (how many test documents?)</li>
+                            <li>Variance across CV folds</li>
+                            <li>Confidence intervals</li>
+                        </ul>
+                    </div>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p><strong>Example comparison:</strong></p>
+                        <table style="font-size: 0.9em;">
+                            <thead>
+                                <tr style="background: #ecf0f1;">
+                                    <th>Method</th>
+                                    <th>Mean Accuracy</th>
+                                    <th>95% CI</th>
+                                    <th>Significant?</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>BoW</td>
+                                    <td>72%</td>
+                                    <td>[68%, 76%]</td>
+                                    <td>—</td>
+                                </tr>
+                                <tr>
+                                    <td>Embeddings</td>
+                                    <td>75%</td>
+                                    <td>[71%, 79%]</td>
+                                    <td>No (CIs overlap)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Confusion Matrices -->
+            <section>
+                <h2>Beyond Accuracy: Confusion Matrices</h2>
+                <div style="font-size: 0.75em;">
+                    <p><strong>Example confusion matrix (3-class classification):</strong></p>
+                    <table style="margin-top: 1em; width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #3498db; color: white;">
+                                <th style="border: 1px solid #ddd; padding: 10px;">True →<br>Predicted ↓</th>
+                                <th style="border: 1px solid #ddd; padding: 10px;">Foreign</th>
+                                <th style="border: 1px solid #ddd; padding: 10px;">Economic</th>
+                                <th style="border: 1px solid #ddd; padding: 10px;">Social</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="fragment">
+                                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Foreign</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; background: #27ae60; color: white;"><strong>85</strong></td>
+                                <td style="border: 1px solid #ddd; padding: 10px;">10</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;">5</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Economic</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;">8</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; background: #27ae60; color: white;"><strong>75</strong></td>
+                                <td style="border: 1px solid #ddd; padding: 10px;">17</td>
+                            </tr>
+                            <tr class="fragment">
+                                <td style="border: 1px solid #ddd; padding: 10px; font-weight: bold;">Social</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;">4</td>
+                                <td style="border: 1px solid #ddd; padding: 10px;">15</td>
+                                <td style="border: 1px solid #ddd; padding: 10px; background: #27ae60; color: white;"><strong>81</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p><strong>What we learn:</strong></p>
+                        <ul class="small-text">
+                            <li>Foreign Policy is easiest to classify (85% correct)</li>
+                            <li>Economic and Social get confused (17 Economic predicted as Social)</li>
+                            <li>Why? Shared vocabulary about "jobs", "opportunity", "families"</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Analysis as Substantive -->
+            <section>
+                <h2>Error Analysis is Substantive</h2>
+                <div class="method-box">
+                    <p class="small-text"><strong>Misclassifications reveal meaningful patterns:</strong></p>
+                    <div class="fragment">
+                        <p><strong>Example: Economic misclassified as Social</strong></p>
+                        <div class="quote small-text">
+                            "We need to invest in our workers through education and training programs to ensure good-paying jobs for American families..."
+                        </div>
+                        <p class="small-text"><strong>Why confused?</strong> Bridges economic and social domains - uses vocabulary from both!</p>
+                    </div>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p class="small-text"><strong>Substantive insight:</strong></p>
+                        <ul class="small-text">
+                            <li>Some topics genuinely overlap in political discourse</li>
+                            <li>Systematic confusions show connections between domains</li>
+                            <li>Changes in confusion patterns = shifts in framing</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Multiple Metrics -->
+            <section>
+                <h2>Beyond Accuracy: Multiple Metrics</h2>
+                <table style="font-size: 0.65em; width: 100%;">
+                    <thead>
+                        <tr style="background: #3498db; color: white;">
+                            <th>Metric</th>
+                            <th>Definition</th>
+                            <th>When It Matters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="fragment">
+                            <td><strong>Accuracy</strong></td>
+                            <td>Overall % correct</td>
+                            <td>Balanced classes</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Precision</strong></td>
+                            <td>Of predicted X, how many actually X?</td>
+                            <td>False positives costly</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Recall</strong></td>
+                            <td>Of actual X, how many did we find?</td>
+                            <td>False negatives costly</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>F1 Score</strong></td>
+                            <td>Harmonic mean of precision & recall</td>
+                            <td>Balance both concerns</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Macro-avg</strong></td>
+                            <td>Average across classes equally</td>
+                            <td>Care about all classes</td>
+                        </tr>
+                        <tr class="fragment">
+                            <td><strong>Weighted-avg</strong></td>
+                            <td>Average weighted by class size</td>
+                            <td>Classes have different importance</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="fragment" style="margin-top: 0.5em; font-size: 0.8em;">
+                    <strong>Peterson & Spirling:</strong> Report multiple metrics, not just accuracy!
+                </p>
+            </section>
+
+            <!-- When is Classification Accuracy Interesting -->
+            <section>
+                <h2>When is Classification Accuracy Interesting?</h2>
+                <ol>
+                    <li class="fragment"><strong>Measuring similarity/distinctiveness</strong>
+                        <p class="small-text">How distinct are party platforms?</p>
+                    </li>
+                    <li class="fragment"><strong>Tracking change over time</strong>
+                        <p class="small-text">Is polarization increasing? (rising accuracy)</p>
+                    </li>
+                    <li class="fragment"><strong>Comparing contexts</strong>
+                        <p class="small-text">Is US Congress more polarized than UK Parliament?</p>
+                    </li>
+                    <li class="fragment"><strong>Testing theories</strong>
+                        <p class="small-text">Do coalition governments produce convergent language?</p>
+                    </li>
+                    <li class="fragment"><strong>Measuring construct validity</strong>
+                        <p class="small-text">Do our topic categories have linguistic coherence?</p>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- Common Mistakes -->
+            <section>
+                <h2>Common Mistakes to Avoid</h2>
+                <ol>
+                    <li class="fragment"><strong>No baseline comparison</strong>
+                        <p class="small-text">"75% accuracy!" → But is that good? Compared to what?</p>
+                    </li>
+                    <li class="fragment"><strong>Single train/test split</strong>
+                        <p class="small-text">Lucky split can give misleading results</p>
+                    </li>
+                    <li class="fragment"><strong>Reporting only accuracy</strong>
+                        <p class="small-text">Precision, recall, F1, confusion matrix all matter</p>
+                    </li>
+                    <li class="fragment"><strong>Ignoring class imbalance</strong>
+                        <p class="small-text">90% accuracy when 90% of data is one class = useless</p>
+                    </li>
+                    <li class="fragment"><strong>Not examining errors</strong>
+                        <p class="small-text">Misclassifications tell you something!</p>
+                    </li>
+                    <li class="fragment"><strong>Over-interpreting small differences</strong>
+                        <p class="small-text">75% vs. 73% may not be significant</p>
+                    </li>
+                </ol>
+            </section>
+
+            <!-- Practical Recommendations -->
+            <section>
+                <h2>Practical Recommendations</h2>
+                <div class="principle-box small-text">
+                    <p><strong>Peterson & Spirling's best practices:</strong></p>
+                    <ol>
+                        <li class="fragment"><strong>Always compare to baselines</strong>
+                            <ul><li>Chance, frequency, simple features</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Use cross-validation</strong>
+                            <ul><li>K-fold (K=5 or 10), report mean and SD</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Report multiple metrics</strong>
+                            <ul><li>Accuracy, precision, recall, F1</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Show confusion matrix</strong>
+                            <ul><li>Which categories get confused?</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Examine errors qualitatively</strong>
+                            <ul><li>Read misclassified documents</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Provide substantive interpretation</strong>
+                            <ul><li>What does the accuracy level mean?</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Test statistical significance</strong>
+                            <ul><li>Use confidence intervals or hypothesis tests</li></ul>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Case Study: UK Polarization -->
+            <section>
+                <h2>Case Study: UK Parliamentary Polarization</h2>
+                <div class="small-text">
+                    <p><strong>Peterson & Spirling's application:</strong></p>
+                    <div class="fragment">
+                        <p><strong>Task:</strong> Classify speeches by party (Labour vs. Conservative)</p>
+                        <p><strong>Data:</strong> UK Hansard (parliamentary debates), 1830-2010</p>
+                        <p><strong>Method:</strong> Bag-of-words + logistic regression</p>
+                    </div>
+                    <div class="fragment" style="margin-top: 1em;">
+                        <p><strong>Key Findings:</strong></p>
+                        <ul>
+                            <li>Classification accuracy varies dramatically over time</li>
+                            <li>Low in 19th century (~55-60%): Similar party language</li>
+                            <li>Rising through 20th century</li>
+                            <li>Peaks in 1980s-1990s (~75-80%): Thatcher era polarization</li>
+                            <li>Slight decline in 2000s: "New Labour" convergence?</li>
+                        </ul>
+                    </div>
+                    <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                        <strong>Substantive insight:</strong> Accuracy trends track known political history!
+                    </p>
+                </div>
+            </section>
+
+            <!-- Accuracy Over Time -->
+            <section>
+                <h2>Visualization: Accuracy as Dependent Variable</h2>
+                <div style="text-align: center;">
+                    <svg width="800" height="400" style="border: 1px solid #ddd;">
+                        <!-- Axes -->
+                        <line x1="80" y1="350" x2="750" y2="350" stroke="black" stroke-width="2"/>
+                        <line x1="80" y1="50" x2="80" y2="350" stroke="black" stroke-width="2"/>
+                        
+                        <!-- Y-axis labels -->
+                        <text x="50" y="355" font-size="14">50%</text>
+                        <text x="50" y="255" font-size="14">60%</text>
+                        <text x="50" y="155" font-size="14">70%</text>
+                        <text x="50" y="55" font-size="14">80%</text>
+                        
+                        <!-- X-axis labels -->
+                        <text x="80" y="375" font-size="14">1850</text>
+                        <text x="280" y="375" font-size="14">1900</text>
+                        <text x="480" y="375" font-size="14">1950</text>
+                        <text x="680" y="375" font-size="14">2000</text>
+                        
+                        <!-- Trend line (simplified) -->
+                        <polyline points="80,300 200,280 350,200 550,130 680,150" 
+                                  fill="none" stroke="#e74c3c" stroke-width="3" class="fragment"/>
+                        
+                        <!-- Labels -->
+                        <text x="300" y="30" font-size="18" font-weight="bold">Party Classification Accuracy Over Time</text>
+                        <text x="20" y="200" font-size="16" transform="rotate(-90 20 200)">Classification Accuracy</text>
+                        <text x="400" y="395" font-size="16">Year</text>
+                        
+                        <!-- Annotations -->
+                        <text x="350" y="190" font-size="12" class="fragment" fill="#e74c3c">Thatcher Era</text>
+                        <text x="100" y="290" font-size="12" class="fragment">Similar language</text>
+                    </svg>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-size: 0.8em; font-style: italic;">
+                    Rising accuracy = increasing linguistic polarization
+                </p>
+            </section>
+
+            <!-- Connection to Week 3 Lab -->
+            <section>
+                <h2>Connecting to Week 3 Lab</h2>
+                <div class="columns small-text">
+                    <div class="column">
+                        <h3>What You'll Do</h3>
+                        <ul>
+                            <li>Build 3-class classifier</li>
+                            <li>Train/test split</li>
+                            <li>Cross-validation</li>
+                            <li>Compare BoW vs. embeddings</li>
+                            <li>Confusion matrices</li>
+                            <li>Error analysis</li>
+                        </ul>
+                    </div>
+                    <div class="column fragment">
+                        <h3>P&S Principles</h3>
+                        <ul>
+                            <li><span class="highlight">Baselines!</span> Compare to chance</li>
+                            <li><span class="highlight">Multiple metrics</span> not just accuracy</li>
+                            <li><span class="highlight">Confusion matrix</span> shows patterns</li>
+                            <li><span class="highlight">Error analysis</span> is substantive</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="fragment" style="margin-top: 1em; font-style: italic;">
+                    Think about what your accuracy tells you about your categories!
+                </p>
+            </section>
+
+            <!-- Decision Framework -->
+            <section>
+                <h2>Decision Framework for Classification</h2>
+                <div style="font-size: 0.75em; text-align: left;">
+                    <p class="fragment"><strong>Q: Is classification accuracy my research finding?</strong></p>
+                    <ul class="fragment">
+                        <li>Yes → Focus on baselines, confidence intervals, temporal trends</li>
+                        <li>No → Focus on maximizing accuracy for prediction</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 0.5em;"><strong>Q: What baseline should I use?</strong></p>
+                    <ul class="fragment">
+                        <li>Always: Chance baseline (1/K for K classes)</li>
+                        <li>Always: Frequency baseline (predict most common)</li>
+                        <li>Context: Prior work, human performance, simple features</li>
+                    </ul>
+                    <p class="fragment" style="margin-top: 0.5em;"><strong>Q: Which metric matters most?</strong></p>
+                    <ul class="fragment">
+                        <li>Balanced classes → Accuracy</li>
+                        <li>Imbalanced classes → F1, precision/recall</li>
+                        <li>Always report multiple!</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Critical Questions -->
+            <section>
+                <h2>Critical Questions to Always Ask</h2>
+                <ol>
+                    <li class="fragment">What is my <span class="highlight">baseline</span>? (Chance? Frequency? Prior work?)</li>
+                    <li class="fragment">Is my train/test split <span class="highlight">stratified</span>?</li>
+                    <li class="fragment">Have I used <span class="highlight">cross-validation</span>?</li>
+                    <li class="fragment">What do the <span class="highlight">confusions</span> reveal?</li>
+                    <li class="fragment">Are my classes <span class="highlight">balanced</span>?</li>
+                    <li class="fragment">Is the difference <span class="highlight">statistically significant</span>?</li>
+                    <li class="fragment">What does this accuracy level <span class="highlight">mean substantively</span>?</li>
+                </ol>
+            </section>
+
+            <!-- Key Takeaways -->
+            <section>
+                <h2>Key Takeaways</h2>
+                <div class="principle-box">
+                    <ol>
+                        <li><strong>Classification accuracy can be your research finding</strong>
+                            <p class="small-text">Not just a validation metric</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Always compare to baselines</strong>
+                            <p class="small-text">Accuracy means nothing in isolation</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Use cross-validation properly</strong>
+                            <p class="small-text">Single split can be misleading</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Confusion matrices reveal patterns</strong>
+                            <p class="small-text">Which categories get confused, and why?</p>
+                        </li>
+                        <li class="fragment" style="margin-top: 0.5em;"><strong>Error analysis is substantive</strong>
+                            <p class="small-text">Read misclassified documents</p>
+                        </li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- The Big Picture -->
+            <section>
+                <h2>The Big Picture</h2>
+                <div class="quote">
+                    "Rather than viewing classification accuracy merely as a means to assess model performance, we can treat it as a substantive quantity of interest in its own right—one that helps us understand the linguistic distinctiveness of political categories."
+                    <p style="text-align: right; margin-top: 1em;">— Peterson & Spirling (paraphrased), 2018</p>
+                </div>
+                <p class="fragment" style="margin-top: 1.5em; font-size: 1.1em; text-align: center;">
+                    <strong>This week: Build classifiers that tell us something!</strong>
+                </p>
+            </section>
+
+            <!-- Discussion Questions -->
+            <section>
+                <h2>Discussion Questions</h2>
+                <ol>
+                    <li class="fragment">What would high vs. low classification accuracy tell you about Foreign/Economic/Social policy domains?</li>
+                    <li class="fragment">How would you test if party polarization is increasing using text classification?</li>
+                    <li class="fragment">Why might Economic and Social policy get confused more than Foreign policy?</li>
+                    <li class="fragment">What baseline should you use for a 3-class balanced classification problem?</li>
+                </ol>
+            </section>
+
+            <!-- Assignment Connection -->
+            <section>
+                <h2>This Week's Assignment</h2>
+                <div class="small-text">
+                    <p><strong>Apply Peterson & Spirling's framework:</strong></p>
+                    <ul>
+                        <li class="fragment"><strong>Build 3-class classifier</strong>
+                            <ul><li>Foreign Policy / Economic / Social Policy</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Compare methods</strong>
+                            <ul><li>Bag-of-words baseline</li>
+                            <li>Word2Vec embeddings (from Week 2)</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Proper evaluation</strong>
+                            <ul><li>Train/test split + cross-validation</li>
+                            <li>Multiple metrics (accuracy, precision, recall, F1)</li>
+                            <li>Confusion matrix analysis</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Error analysis</strong>
+                            <ul><li>Read 10+ misclassified documents</li>
+                            <li>What patterns do you see?</li></ul>
+                        </li>
+                        <li class="fragment"><strong>Report (2 pages)</strong>
+                            <ul><li>Which method works best and why?</li>
+                            <li>What does accuracy tell you about the categories?</li>
+                            <li>Connection to Peterson & Spirling insights</li></ul>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Further Reading -->
+            <section>
+                <h2>Further Reading</h2>
+                <div class="small-text">
+                    <p><strong>Classification methodology:</strong></p>
+                    <ul>
+                        <li>Watanabe & Zhou (2022). "Theory-Driven Analysis of Large Corpora"</li>
+                        <li>Hopkins & King (2010). "A Method of Automated Nonparametric Content Analysis"</li>
+                    </ul>
+                    <p style="margin-top: 1em;"><strong>Polarization measurement:</strong></p>
+                    <ul>
+                        <li>Gentzkow et al. (2019). "Measuring Group Differences in High-Dimensional Choices"</li>
+                        <li>Lauderdale & Herzog (2016). "Measuring Political Positions from Legislative Speech"</li>
+                    </ul>
+                    <p style="margin-top: 1em;"><strong>Machine learning for social science:</strong></p>
+                    <ul>
+                        <li>Grimmer et al. (2022). <em>Text as Data</em> - Ch. on supervised learning</li>
+                        <li>Athey & Imbens (2019). "Machine Learning Methods for Economics"</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Closing -->
+            <section>
+                <h2>Remember...</h2>
+                <div style="font-size: 1.2em; text-align: center; margin: 2em 0;">
+                    <p class="fragment" style="margin: 1em 0;">📊 <strong>Accuracy can be your finding</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">⚖️ <strong>Always compare to baselines</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">🔍 <strong>Confusion matrices reveal patterns</strong></p>
+                    <p class="fragment" style="margin: 1em 0;">📈 <strong>Error analysis is substantive</strong></p>
+                </div>
+                <p class="fragment" style="margin-top: 2em; font-size: 0.9em;">
+                    Questions? Let's discuss!
+                </p>
+            </section>
+
+            <!-- Thank You -->
+            <section>
+                <h1>Thank You!</h1>
+                <div style="margin-top: 2em;">
+                    <p>Now let's build some classifiers...</p>
+                </div>
+                <div class="citation">
+                    <p><strong>Full Citation:</strong><br>
+                    Peterson, Andrew, and Arthur Spirling. 2018. "Classification Accuracy as a Substantive Quantity of Interest: Measuring Polarization in Westminster Systems." <em>Political Analysis</em> 26(3): 250-266.</p>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@4.5.0/dist/reveal.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            slideNumber: true,
+            transition: 'slide',
+            width: 1200,
+            height: 700,
+            margin: 0.04,
+            controls: true,
+            progress: true,
+            center: true,
+            fragments: true
+        });
+    </script>
+</body>
+</html>
